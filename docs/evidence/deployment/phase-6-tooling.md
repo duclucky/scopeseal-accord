@@ -95,6 +95,8 @@ exactly 2 GEN.
 - A failed source revision can leave the active slot only through `studionet:quarantine`, which requires the exact
   non-penalizing retry state and 2/2/0/0 GEN accounting. `studionet:recover-superseded` later enforces expiry,
   recovery, withdrawal, and zero remaining accounting against the archived address.
+- A user-directed `ABANDONED_TESTNET` record is accepted as replaceable but is not treated as recovered or zeroed.
+  It remains an explicitly documented blocker against a full superseded-accounting compliance claim.
 - Evidence files contain safe projections and canonical views, never complete receipts.
 
 ## Dependency audit note

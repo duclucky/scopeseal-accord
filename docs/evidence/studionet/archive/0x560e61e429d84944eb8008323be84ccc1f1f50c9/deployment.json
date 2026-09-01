@@ -10,7 +10,7 @@
   "sponsor": "0xC495ef51618D03267A1f227aFe5b27B38c748272",
   "contractor": "0x45aD397c438397A702B53a7499a78D08961D39Db",
   "active": false,
-  "result": "QUARANTINED",
+  "result": "ABANDONED_TESTNET",
   "contractAddress": "0x560e61E429D84944eB8008323bE84cCc1f1f50C9",
   "transactionHash": "0x368f271f14e3b3fc6513153d6cae90a8e7610285a230b0f89f35c53a7dfc4a1f",
   "transactionExplorer": "https://explorer-studio.genlayer.com/tx/0x368f271f14e3b3fc6513153d6cae90a8e7610285a230b0f89f35c53a7dfc4a1f",
@@ -25,8 +25,9 @@
     "contractAddress": "0x560e61E429D84944eB8008323bE84cCc1f1f50C9"
   },
   "quarantinedAt": "2026-09-01T07:39:10.481Z",
-  "recoveryPending": true,
+  "recoveryPending": false,
   "recoveryAvailableAt": "2026-09-02T04:43:23Z",
-  "closePathDefined": true,
-  "remainingAccountingZero": false
+  "closePathDefined": false,
+  "remainingAccountingZero": false,
+  "abandonedReason": "User directed that failed testnet revisions and test GEN recovery be excluded from the active project."
 }

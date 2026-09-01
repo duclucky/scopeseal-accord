@@ -5,6 +5,7 @@ import {
   deploymentDecision,
   isSuccessfulFinalizedReceipt,
   mergeEnvironment,
+  orderPendingRecoveries,
   quarantineDecision,
   retryDecision,
   retirementDecision,
@@ -71,6 +72,7 @@ test("deployment identity resumes only the exact active revision", () => {
   assert.equal(deploymentDecision({ ...current, sourceSha256: "changed", result: "SUCCESS", active: true, contractAddress: "0xcontract" }, current), "REFUSE");
   assert.equal(deploymentDecision({ ...current, sourceSha256: "old", result: "RETIRED", active: false, remainingAccountingZero: true, contractAddress: "0xcontract" }, current), "REPLACE");
   assert.equal(deploymentDecision({ ...current, sourceSha256: "old", result: "QUARANTINED", active: false, recoveryPending: true, closePathDefined: true, contractAddress: "0xcontract" }, current), "REPLACE");
+  assert.equal(deploymentDecision({ ...current, sourceSha256: "old", result: "ABANDONED_TESTNET", active: false, recoveryPending: false, contractAddress: "0xcontract" }, current), "REPLACE");
 });
 
 
@@ -153,11 +155,43 @@ test("a failed active revision is quarantined only with a bounded recovery path"
     { action: "QUARANTINE", recoveryAvailableAt: "2026-09-02T04:43:23Z" },
   );
   assert.deepEqual(
+    quarantineDecision(agreement, accounting, {
+      attemptNumber: 2,
+      sourceStatus: "INVALID",
+      sourceCoverage: "INCOMPLETE",
+      aggregateVerdict: "UNVERIFIABLE",
+      consequenceClass: "NO_CONSEQUENCE",
+    }),
+    { action: "QUARANTINE", recoveryAvailableAt: "2026-09-02T04:43:23Z" },
+  );
+  assert.deepEqual(
     quarantineDecision(agreement, { ...accounting, credited_gen: 1 }, attempt),
     { action: "REFUSE" },
   );
   assert.deepEqual(
     quarantineDecision(agreement, accounting, { ...attempt, attemptNumber: 1 }),
     { action: "REFUSE" },
+  );
+  assert.deepEqual(
+    quarantineDecision(agreement, accounting, {
+      attemptNumber: 2,
+      sourceStatus: "INVALID",
+      sourceCoverage: "INCOMPLETE",
+      aggregateVerdict: "UNVERIFIABLE",
+      consequenceClass: "CREDIT_CONTRACTOR",
+    }),
+    { action: "REFUSE" },
+  );
+});
+
+
+test("multiple quarantined revisions recover in deadline order", () => {
+  const ordered = orderPendingRecoveries([
+    { deployment: { contractAddress: "0x2", recoveryAvailableAt: "2026-09-02T07:40:38Z" } },
+    { deployment: { contractAddress: "0x1", recoveryAvailableAt: "2026-09-02T04:43:23Z" } },
+  ]);
+  assert.deepEqual(
+    ordered.map(({ deployment }) => deployment.contractAddress),
+    ["0x1", "0x2"],
   );
 });

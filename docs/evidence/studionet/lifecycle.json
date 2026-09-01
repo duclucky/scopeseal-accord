@@ -1,7 +1,8 @@
 {
   "archived": true,
-  "quarantinedAt": "2026-09-01T07:39:10.481Z",
-  "contractAddress": "0x560e61E429D84944eB8008323bE84cCc1f1f50C9",
-  "archive": "archive/0x560e61e429d84944eb8008323be84ccc1f1f50c9",
-  "recoveryPending": true
+  "quarantinedAt": "2026-09-01T07:46:43.657Z",
+  "contractAddress": "0x4f26e692fd9F20e3d267C77E8AF3e79c612300Cc",
+  "archive": "archive/0x4f26e692fd9f20e3d267c77e8af3e79c612300cc",
+  "recoveryPending": false,
+  "abandonedTestnet": true
 }

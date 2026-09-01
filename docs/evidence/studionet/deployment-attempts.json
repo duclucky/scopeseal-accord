@@ -35,6 +35,41 @@
         "consensusResult": "MAJORITY_AGREE",
         "contractAddress": "0x560e61E429D84944eB8008323bE84cCc1f1f50C9"
       }
+    },
+    {
+      "transactionHash": "0xfd329ae8d64a2fb515f930f74378f767012bc4b487da5c313655b7b7f061f8d0",
+      "network": "studionet",
+      "chainId": 61999,
+      "rpc": "https://studio.genlayer.com/api",
+      "repositoryCommit": "c0bf5d4af007488b437aee3d8d655b50b9169c30",
+      "sourceCommit": "89762decf17427e99495991436a4ce49eeae9fdb",
+      "sourceSha256": "672be0ddbd79a45f542b6699f02ee5d5213dcfb86f366a6002f7f095ba771dcd",
+      "depends": "py-genlayer:1jb45aa8ynh2a9c9xn3b7qqh8sm5q93hwfp7jqmwsfhh8jpz09h6",
+      "contractApi": "ScopeSealAccord/1",
+      "sponsor": "0xC495ef51618D03267A1f227aFe5b27B38c748272",
+      "contractor": "0x45aD397c438397A702B53a7499a78D08961D39Db",
+      "status": "FINALIZED",
+      "submittedAt": "2026-09-01T07:39:51.051Z",
+      "acceptedAt": "2026-09-01T07:40:26.786Z",
+      "acceptedReceipt": {
+        "label": "deploy",
+        "transactionHash": "0xfd329ae8d64a2fb515f930f74378f767012bc4b487da5c313655b7b7f061f8d0",
+        "status": "ACCEPTED",
+        "txExecutionResult": "SUCCESS",
+        "consensusResult": "MAJORITY_AGREE",
+        "contractAddress": "0x4f26e692fd9F20e3d267C77E8AF3e79c612300Cc"
+      },
+      "result": "SUCCESS",
+      "finalizedAt": "2026-09-01T07:40:27.137Z",
+      "contractAddress": "0x4f26e692fd9F20e3d267C77E8AF3e79c612300Cc",
+      "receipt": {
+        "label": "deploy",
+        "transactionHash": "0xfd329ae8d64a2fb515f930f74378f767012bc4b487da5c313655b7b7f061f8d0",
+        "status": "FINALIZED",
+        "txExecutionResult": "SUCCESS",
+        "consensusResult": "MAJORITY_AGREE",
+        "contractAddress": "0x4f26e692fd9F20e3d267C77E8AF3e79c612300Cc"
+      }
     }
   ]
 }

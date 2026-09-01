@@ -118,6 +118,9 @@ def test_consensus_and_value_primitives_are_present(source: str) -> None:
     assert "gl.vm.run_nondet(" in source
     assert "run_nondet_unsafe" not in source
     assert "GEN_SCALE" in source
+    assert "gl.message.value" in source
+    assert "emit_transfer(value=" in source
+    assert "credit debited before transfer" in source
 
 
 def test_official_queries_are_bounded_to_the_publication_graph(source: str) -> None:
@@ -126,6 +129,13 @@ def test_official_queries_are_bounded_to_the_publication_graph(source: str) -> N
     assert "GRAPH ?g" not in source
     assert "?contract a epo:Contract" in source
     assert "epo:SettledContract" not in source
-    assert "gl.message.value" in source
-    assert "emit_transfer(value=" in source
-    assert "credit debited before transfer" in source
+
+
+def test_semantic_prompt_states_the_exact_settlement_row_schema(module: ast.Module) -> None:
+    string_literals = "\n".join(
+        node.value
+        for node in ast.walk(module)
+        if isinstance(node, ast.Constant) and isinstance(node.value, str)
+    )
+    assert 'ENTITY_RESULTS_SCHEMA=[{"entity_id":"AMENDMENT_SCOPE","verdict":"WITHIN_BASELINE|MATERIAL_AMENDMENT"}]' in string_literals
+    assert "AGGREGATE_VERDICT must exactly equal the single entity verdict." in string_literals

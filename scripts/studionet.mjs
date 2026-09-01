@@ -186,6 +186,9 @@ export function deploymentDecision(existing, current) {
   ) {
     return "REPLACE";
   }
+  if (existing.active === false && existing.result === "ABANDONED_TESTNET" && existing.recoveryPending === false) {
+    return "REPLACE";
+  }
   const identical = IDENTITY_KEYS.every((key) => existing[key] === current[key]);
   if (identical && existing.active === true && existing.result === "SUCCESS" && existing.contractAddress) return "RESUME";
   return "REFUSE";
@@ -249,12 +252,21 @@ export function retirementDecision(agreement, accounting, now = new Date().toISO
 
 
 export function quarantineDecision(agreement, accounting, attempt) {
+  const transientUnavailable = (
+    attempt?.sourceStatus === "UNAVAILABLE"
+    && attempt?.aggregateVerdict === "UNVERIFIABLE"
+  );
+  const structuralNoConsequence = (
+    attempt?.sourceStatus === "INVALID"
+    && attempt?.sourceCoverage === "INCOMPLETE"
+    && attempt?.aggregateVerdict === "UNVERIFIABLE"
+    && attempt?.consequenceClass === "NO_CONSEQUENCE"
+  );
   if (
     agreement?.state !== "RETRYABLE"
     || !agreement.reviewDeadline
     || Number(attempt?.attemptNumber) !== Number(agreement.attemptCount)
-    || attempt?.sourceStatus !== "UNAVAILABLE"
-    || attempt?.aggregateVerdict !== "UNVERIFIABLE"
+    || (!transientUnavailable && !structuralNoConsequence)
   ) {
     return { action: "REFUSE" };
   }
@@ -751,7 +763,9 @@ async function quarantine() {
   const attempt = {
     attemptNumber: Number(field(rawAttempt, "attempt_number", "attemptNumber") ?? 0),
     sourceStatus: field(rawAttempt, "source_status", "sourceStatus") ?? "UNKNOWN",
+    sourceCoverage: field(rawAttempt, "source_coverage", "sourceCoverage") ?? "UNKNOWN",
     aggregateVerdict: field(rawAttempt, "aggregate_verdict", "aggregateVerdict") ?? "UNKNOWN",
+    consequenceClass: field(rawAttempt, "consequence_class", "consequenceClass") ?? "UNKNOWN",
   };
   const decision = quarantineDecision(agreement, state.accounting, attempt);
   if (decision.action !== "QUARANTINE") {
@@ -812,17 +826,15 @@ function pendingSupersededDeployments() {
 }
 
 
-async function recoverSuperseded() {
-  const clients = await roleClients(true);
-  const pending = pendingSupersededDeployments();
-  if (pending.length === 0) {
-    console.log(JSON.stringify({ Result: "NO_PENDING_SUPERSEDED_DEPLOYMENT" }, null, 2));
-    return;
-  }
-  if (pending.length > 1) {
-    throw new Error("More than one superseded deployment needs recovery; recover one explicit archive at a time.");
-  }
-  const { paths, deployment } = pending[0];
+export function orderPendingRecoveries(pending) {
+  return [...pending].sort((left, right) => (
+    String(left.deployment.recoveryAvailableAt).localeCompare(String(right.deployment.recoveryAvailableAt))
+  ));
+}
+
+
+async function recoverOneSuperseded(clients, item) {
+  const { paths, deployment } = item;
   if (
     deployment.sponsor.toLowerCase() !== clients.sponsorAccount.address.toLowerCase()
     || deployment.contractor.toLowerCase() !== clients.contractorAccount.address.toLowerCase()
@@ -837,13 +849,12 @@ async function recoverSuperseded() {
   for (let step = 0; step < 4; step += 1) {
     const decision = retirementDecision(state.agreement, state.accounting);
     if (decision.action === "WAIT") {
-      console.log(JSON.stringify({
-        Result: "WAIT_FOR_SUPERSEDED_EXPIRY",
+      return {
+        result: "WAIT_FOR_SUPERSEDED_EXPIRY",
         contractAddress: deployment.contractAddress,
         availableAt: decision.availableAt,
         accounting: state.accounting,
-      }, null, 2));
-      return;
+      };
     }
     if (decision.action === "RECOVER") {
       state = await lifecycleWrite({
@@ -876,17 +887,31 @@ async function recoverSuperseded() {
         recoveredAt,
         finalCanonical: state,
       });
-      console.log(JSON.stringify({
-        Result: "SUPERSEDED_RECOVERED",
+      return {
+        result: "SUPERSEDED_RECOVERED",
         contractAddress: deployment.contractAddress,
         remainingAccountingZero: true,
         accounting: state.accounting,
-      }, null, 2));
-      return;
+      };
     }
     throw new Error("Superseded recovery refused because canonical accounting is not safely recoverable.");
   }
   throw new Error("Superseded recovery exceeded the bounded four-step limit.");
+}
+
+
+async function recoverSuperseded() {
+  const clients = await roleClients(true);
+  const pending = orderPendingRecoveries(pendingSupersededDeployments());
+  if (pending.length === 0) {
+    console.log(JSON.stringify({ Result: "NO_PENDING_SUPERSEDED_DEPLOYMENT" }, null, 2));
+    return;
+  }
+  const revisions = [];
+  for (const item of pending) {
+    revisions.push(await recoverOneSuperseded(clients, item));
+  }
+  console.log(JSON.stringify({ Result: "SUPERSEDED_RECOVERY_CHECKED", revisions }, null, 2));
 }
 
 
