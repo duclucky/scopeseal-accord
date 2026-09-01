@@ -183,6 +183,7 @@ Expected: all frontend tests pass, TypeScript exits 0, and Vite production build
 - Create: `docs/evidence/frontend/phase-15-browser-wallet-lifecycle.md`
 - Modify: `README.md`
 - Modify: `docs/README.md`
+- Modify: `docs/evidence/frontend/phase-6-integration.md`
 - Modify: `docs/superpowers/specs/2026-09-01-project-explorer-listing-design.md`
 
 **Interfaces:**
@@ -258,6 +259,8 @@ Update `README.md` to link the listing and browser evidence, state that the comp
 
 Update `docs/README.md` to state the active browser evidence finalized the material-amendment negotiation path while the earlier script lifecycle finalized the within-baseline path. Preserve the existing superseded-accounting blocker language.
 
+Update the historical Phase 6 integration note so its then-pending browser signature statement links to the completed Phase 15 evidence instead of reading as the current project status.
+
 Change the approved spec status to `Approved 2026-09-01`.
 
 - [ ] **Step 4: Verify documentation consistency and commit Task 2**
@@ -266,7 +269,7 @@ Run:
 
 ```powershell
 rg -n "browser-wallet write/sign/finality run has not yet|browser wallet transaction.*pending|Status:.*Live|wei" README.md docs
-rg -n "Name:|Category: Projects|Publication tier: Preview|One-liner:|Short description|How to try it|scopeseal-logo-512.png|explorer-studio" docs/submission/project-listing.md
+rg -n "Name:|Category:.*Projects|Publication tier:.*Preview|One-liner:|Short description|How to try it|scopeseal-logo-512.png|explorer-studio" docs/submission/project-listing.md
 git diff --check
 ```
 

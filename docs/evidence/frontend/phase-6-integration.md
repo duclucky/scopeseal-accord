@@ -81,6 +81,8 @@ is still required before this production path is claimed complete.
 - Browser-local RPC/CORS behavior: verified.
 - Production same-origin proxy behavior: locally tested; live deployment proof pending.
 - EIP-6963 selection, injected fallbacks, centered modal and disconnect: verified by frontend tests and browser layout.
-- Real browser wallet signature: pending a configured deployment and user wallet environment.
+- Real browser wallet signature was not yet available at Phase 6. It is now proven separately in
+  [`phase-15-browser-wallet-lifecycle.md`](phase-15-browser-wallet-lifecycle.md); this historical Phase 6 record remains
+  the integration checkpoint rather than being presented as the later runtime proof.
 - Accepted/finalized browser transaction and post-finality canonical reload against Studionet: pending the network
   lifecycle gate.

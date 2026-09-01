@@ -1,7 +1,7 @@
 # ScopeSeal Accord listing and logo design
 
 Date: 2026-09-01
-Status: Awaiting written-spec approval
+Status: Approved 2026-09-01
 
 ## Objective
 

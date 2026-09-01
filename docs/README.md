@@ -1,6 +1,6 @@
 # ScopeSeal Accord project specification
 
-Status: **IMPLEMENTED / ACTIVE STUDIONET LIFECYCLE COMPLETE**
+Status: **IMPLEMENTED / ACTIVE STUDIONET SCRIPT + CHROME/OKX LIFECYCLES COMPLETE**
 
 Track: **Projects**
 
@@ -17,6 +17,11 @@ acceptance claim. The new active revision independently completed its intended l
 Active contract: `0x8837Acc0F7E1C73Af0ee7A630D85f8DfD613E879` on Studionet. Its official review finalized
 `WITHIN_BASELINE`, contractor withdrawal transferred 2 GEN, and canonical accounting closed at received 2 GEN,
 withdrawn 2 GEN, locked 0 GEN, credited 0 GEN.
+
+The production browser independently proved the material path on agreement `scopeseal-browser-002`: Chrome/OKX
+signed create, ratify, official review, 2 GEN contractor proposal, accept and withdraw actions. The canonical agreement
+ended `CLOSED` with verdict `NEGOTIATED`, 0 GEN locked and 0 GEN credits. This agreement-level proof does not erase the
+separate `scopeseal-browser-001` test agreement, which remains `DRAFT` with 2 GEN locked at the user's direction.
 
 ## Identity
 
