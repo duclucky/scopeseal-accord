@@ -12,9 +12,18 @@ function unavailable(): never {
 }
 
 export const unconfiguredContract: ContractAdapter = {
+  configuration: {
+    readConfigured: false,
+    writeConfigured: false,
+    networkName: "Studionet",
+    icReadPath: "/genlayer-rpc",
+    walletWriteChainId: "0xf22f",
+  },
   async getAgreement() { return unavailable(); },
   async listAgreements() { return unavailable(); },
   async getCredit() { return unavailable(); },
+  async waitForAccepted() { return unavailable(); },
+  async waitForFinality() { return unavailable(); },
   async createAgreement() { return unavailable(); },
   async ratifyAgreement() { return unavailable(); },
   async reviewModification() { return unavailable(); },

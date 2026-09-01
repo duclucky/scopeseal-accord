@@ -10,7 +10,8 @@ function deferred<T>() {
 }
 
 describe("TransactionProvider", () => {
-  it("exposes submitted then finalized and reloads canonical state only after finality", async () => {
+  it("exposes submitted, accepted, then finalized and reloads only after finality", async () => {
+    const acceptance = deferred<void>();
     const finality = deferred<void>();
     const reload = vi.fn().mockResolvedValue(undefined);
     const wrapper = ({ children }: { children: ReactNode }) => (
@@ -23,6 +24,7 @@ describe("TransactionProvider", () => {
       operation = result.current.run({
         label: "Create agreement",
         submit: async () => ({ hash: "0xabc" }),
+        waitForAccepted: async () => acceptance.promise,
         waitForFinality: async () => finality.promise,
         reload,
       });
@@ -30,6 +32,10 @@ describe("TransactionProvider", () => {
 
     await vi.waitFor(() => expect(result.current.state.phase).toBe("submitted"));
     expect(result.current.state.hash).toBe("0xabc");
+    expect(reload).not.toHaveBeenCalled();
+
+    acceptance.resolve();
+    await vi.waitFor(() => expect(result.current.state.phase).toBe("accepted"));
     expect(reload).not.toHaveBeenCalled();
 
     finality.resolve();
@@ -49,6 +55,7 @@ describe("TransactionProvider", () => {
       await result.current.run({
         label: "Ratify",
         submit: async () => { throw new Error("User rejected the request"); },
+        waitForAccepted: async () => undefined,
         waitForFinality: async () => undefined,
         reload: async () => undefined,
       });

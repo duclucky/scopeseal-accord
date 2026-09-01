@@ -7,6 +7,7 @@ import {
 } from "@phosphor-icons/react";
 import { NavLink, Outlet } from "react-router-dom";
 import { WalletControls } from "../wallet/WalletControls";
+import { NetworkStatus } from "./NetworkStatus";
 
 const navigation = [
   { to: "/", label: "Home", icon: House, end: true },
@@ -44,7 +45,7 @@ export function AppShell() {
       </main>
       <footer className="site-footer">
         <span>Official evidence. Co-ratified terms. Canonical settlement.</span>
-        <span>Studionet configuration is shown honestly when available.</span>
+        <NetworkStatus />
       </footer>
     </div>
   );

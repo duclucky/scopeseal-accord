@@ -1,8 +1,6 @@
 export type AgreementState =
   | "DRAFT"
   | "ACTIVE"
-  | "REVIEW_PENDING"
-  | "WITHIN_BASELINE"
   | "NEGOTIATION"
   | "RETRYABLE"
   | "SETTLED"
@@ -14,32 +12,37 @@ export type Agreement = {
   contractor: string;
   state: AgreementState;
   originalPublication: string;
-  originalNoticeUuidVersion: string;
+  originalNoticeUuid: string;
+  originalNoticeVersion: string;
   buyerId: string;
   procedureId: string;
   contractReference: string;
+  canonicalObjective: string;
   allowance: string;
-  ratificationDeadline: number;
-  reviewDeadline: number;
-  negotiationDeadline: number;
+  ratificationDeadline: string;
+  reviewDeadline: string;
+  negotiationDeadline: string;
   lockedGen: number;
   sponsorCreditGen: number;
   contractorCreditGen: number;
   modificationPublication?: string;
-  verdict?: "WITHIN_BASELINE" | "MATERIAL_AMENDMENT" | "UNVERIFIABLE";
+  verdict?: "WITHIN_BASELINE" | "MATERIAL_AMENDMENT" | "UNVERIFIABLE" | "NEGOTIATED" | "EXPIRED_RECOVERY";
   proposalNonce?: number;
   contractorAllocationGen?: 0 | 1 | 2;
 };
 
 export type CreateAgreementInput = {
+  id: string;
   contractor: string;
   originalPublication: string;
-  originalNoticeUuidVersion: string;
+  originalNoticeUuid: string;
+  originalNoticeVersion: string;
   buyerId: string;
   procedureId: string;
   contractReference: string;
+  canonicalObjective: string;
   allowance: string;
-  ratificationDeadline: number;
-  reviewDeadline: number;
+  ratificationDeadline: string;
+  reviewDeadline: string;
   negotiationWindowSeconds: number;
 };

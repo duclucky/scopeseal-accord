@@ -43,23 +43,21 @@ describe("ScopeSeal product experience", () => {
 
     expect(screen.getByLabelText("Contractor wallet address")).toBeRequired();
     expect(screen.getByLabelText("Original TED publication number")).toBeRequired();
-    expect(screen.getByLabelText("Original notice UUID and version")).toBeRequired();
+    expect(screen.getByLabelText("Original notice UUID")).toBeRequired();
+    expect(screen.getByLabelText("Original notice version")).toBeRequired();
     expect(screen.getByLabelText("Buyer identifier")).toBeRequired();
     expect(screen.getByLabelText("Procedure identifier")).toBeRequired();
     expect(screen.getByLabelText("Contract reference")).toBeRequired();
     expect(screen.getByLabelText("Locked semantic allowance")).toBeRequired();
     expect(screen.getByText("2 GEN")).toBeVisible();
-    expect(screen.getByRole("button", { name: "Connect wallet to create" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Connect wallet to create" })).toBeEnabled();
   });
 
   it("does not present fixture agreement data as canonical", () => {
     renderAt("/agreements/AGR-001");
 
     expect(screen.getByText(/Canonical agreement state is not connected/i)).toBeVisible();
-    expect(screen.getByRole("link", { name: "Open TED" })).toHaveAttribute(
-      "href",
-      "https://ted.europa.eu/en/",
-    );
+    expect(screen.queryByRole("link", { name: "Open TED" })).not.toBeInTheDocument();
   });
 
   it("provides honest empty states for negotiation, activity, and account", () => {
