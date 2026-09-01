@@ -1,6 +1,6 @@
 # Phase 3A frontend design evidence
 
-Status: product blueprint and verified `ui-ux-pro-max` design direction recorded; frontend implementation is pending.
+Status: Phase 3A design and Phase 3B browser baseline complete. FE-PRESERVE is now locked for the product shell, route hierarchy, typography, color, spacing and primary interaction model.
 
 ## Locked product structure
 
@@ -29,6 +29,19 @@ Status: product blueprint and verified `ui-ux-pro-max` design direction recorded
 - 4/8px spacing rhythm, 44px minimum interaction height, visible focus, responsive 375/768/1024/1440 layouts and reduced-motion fallback.
 - No decorative blur, parallax, layout-shifting hover, emoji icon, raw status dashboard or dense method list.
 
-## Pending implementation evidence
+## Phase 3B implementation and browser evidence
 
-- Test/typecheck/build output and 375/768/1440 responsive review.
+- Frontend stack: React 19, React Router 7, TypeScript, Vite and Phosphor icons.
+- Final component test run after the browser regression fix: `npm test` passed 9 files and 24 tests.
+- Static checks: `npm run typecheck` completed with no diagnostic output.
+- Production build: `npm run build` completed with 4,582 transformed modules and generated `dist/index.html`, CSS and JavaScript assets.
+- Browser-local review ran through the Codex in-app Chromium browser against the Vite server exposed only on the local LAN interface.
+- Responsive widths inspected: 375, 768 and 1,440 CSS pixels. Every one of the seven routes was opened at 768 px; measured `scrollWidth` never exceeded `innerWidth`.
+- Routes verified: `/`, `/agreements/new`, `/agreements/demo-001`, `/agreements/demo-001/negotiate`, `/activity`, `/account` and `/help`.
+- Wallet picker was opened on the 375 px layout. The first review found the fixed dialog inherited the header's backdrop-filter containing block (`top = -20.40625px`). A regression test was added, the dialog was portaled to `document.body`, and browser re-measurement showed `top = 251.78125px`, `left = 16px`, `right = 344px` within a 375 px viewport.
+- Browser console review after all route and modal checks: 0 warnings and 0 errors. Vite connection and React development notices were informational only.
+- The current UI intentionally reports absent wallets and absent deployed-contract configuration; it does not simulate accounts, canonical agreement state, balances, transaction hashes, finality or RPC success.
+
+## FE-PRESERVE lock
+
+Later phases may wire real contract data, wallet/network configuration, transaction state and canonical reload into the reserved adapters and state surfaces. They must not redesign the accepted information architecture or replace the established design system unless a verified implementation constraint makes a minimal change necessary and that deviation is documented first.
