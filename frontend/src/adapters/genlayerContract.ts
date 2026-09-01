@@ -82,6 +82,22 @@ function asGen(value: unknown): number {
 }
 
 
+function finalizedExecutionSucceeded(receipt: Record<string, unknown>): boolean {
+  const normalized = receipt.txExecutionResultName ?? receipt.executionResultName;
+  if (normalized === ExecutionResult.FINISHED_WITH_RETURN) return true;
+  const consensus = receipt.consensus_data;
+  const leaders = typeof consensus === "object" && consensus !== null
+    ? (consensus as RawAgreement).leader_receipt
+    : undefined;
+  const leader = Array.isArray(leaders) && typeof leaders[0] === "object" && leaders[0] !== null
+    ? leaders[0] as RawAgreement
+    : undefined;
+  const execution = receipt.execution_result ?? leader?.execution_result;
+  const result = receipt.resultName ?? receipt.result_name ?? receipt.result;
+  return execution === "SUCCESS" && (result === "MAJORITY_AGREE" || result === 6);
+}
+
+
 function mapAgreement(raw: RawAgreement): Agreement {
   const state = asText(raw.state);
   if (!["DRAFT", "ACTIVE", "NEGOTIATION", "RETRYABLE", "SETTLED", "CLOSED"].includes(state)) {
@@ -122,6 +138,9 @@ export function createGenLayerContractAdapter(options: AdapterOptions): Contract
   const readPath = options.icReadPath ?? DEFAULT_READ_PATH;
   const readClient = createClient({ chain: cloneStudionet(), endpoint: readPath });
   const account = isAddress(options.account) ? options.account : undefined;
+  const walletClient = account && options.provider
+    ? createClient({ chain: cloneStudionet(), account, provider: options.provider })
+    : undefined;
 
   const read = (functionName: string, args: unknown[] = []) => readClient.readContract({
     address, functionName, args, jsonSafeReturn: true,
@@ -131,16 +150,15 @@ export function createGenLayerContractAdapter(options: AdapterOptions): Contract
   const write = async (functionName: string, args: unknown[], value = 0n): Promise<TransactionReference> => {
     if (!account || !options.provider) throw new Error("Select a wallet account before writing to the contract.");
     await ensureWalletChain(options.provider);
-    const client = createClient({ chain: cloneStudionet(), account, provider: options.provider });
-    const result = await client.writeContract({ address, functionName, args, value });
+    const result = await walletClient!.writeContract({ address, functionName, args, value });
     if (!isHash(result)) throw new Error("Wallet submission returned an invalid transaction hash.");
     return { hash: result };
   };
 
   const waitFor = async (hash: string, status: TransactionStatus) => {
     if (!isHash(hash)) throw new Error("Transaction hash is invalid.");
-    const receipt = await readClient.waitForTransactionReceipt({ hash, status, retries: 400, interval: 3_000 });
-    if (status === TransactionStatus.FINALIZED && receipt.txExecutionResultName !== ExecutionResult.FINISHED_WITH_RETURN) {
+    const receipt = await (walletClient ?? readClient).waitForTransactionReceipt({ hash, status, retries: 400, interval: 3_000 });
+    if (status === TransactionStatus.FINALIZED && !finalizedExecutionSucceeded(receipt)) {
       throw new Error("The finalized transaction ended with an execution error.");
     }
   };

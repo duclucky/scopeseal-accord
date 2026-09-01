@@ -157,6 +157,43 @@ describe("GenLayer contract adapter", () => {
   });
 
 
+  it("uses the selected wallet provider for receipt polling and accepts raw Studio success receipts", async () => {
+    const provider: Eip1193Provider = { request: vi.fn(async () => "0xf22f") };
+    const readClient = fakeClient({
+      waitForTransactionReceipt: vi.fn(async () => { throw new Error("IC read proxy must not poll wallet transactions"); }),
+    });
+    const walletClient = fakeClient({
+      waitForTransactionReceipt: vi.fn(async ({ status }) => status === TransactionStatus.FINALIZED
+        ? {
+            status: 7,
+            status_name: "FINALIZED",
+            result: 6,
+            result_name: "MAJORITY_AGREE",
+            consensus_data: { leader_receipt: [{ execution_result: "SUCCESS" }] },
+          }
+        : { status: 5, status_name: "ACCEPTED" }),
+    });
+    const configurations: unknown[] = [];
+    const adapter = createGenLayerContractAdapter({
+      contractAddress: CONTRACT,
+      account: SPONSOR,
+      provider,
+      createClient: (config) => {
+        configurations.push(config);
+        return config.provider ? walletClient : readClient;
+      },
+    });
+
+    await expect(adapter.waitForAccepted(HASH)).resolves.toBeUndefined();
+    await expect(adapter.waitForFinality(HASH)).resolves.toBeUndefined();
+    expect(readClient.waitForTransactionReceipt).not.toHaveBeenCalled();
+    expect(walletClient.waitForTransactionReceipt).toHaveBeenCalledTimes(2);
+    expect(configurations).toHaveLength(2);
+    expect(configurations[0]).toMatchObject({ endpoint: "/genlayer-rpc" });
+    expect(configurations[1]).toMatchObject({ account: SPONSOR, provider });
+  });
+
+
   it("rejects finalized execution errors", async () => {
     const client = fakeClient({
       waitForTransactionReceipt: vi.fn(async ({ status }) => ({
