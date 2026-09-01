@@ -137,10 +137,10 @@ Expected: all tests in `src/App.test.tsx` pass.
 
 - [ ] **Step 6: Rasterize the Portal PNG from the SVG**
 
-Resolve Chrome from `C:\Program Files\Google\Chrome\Application\chrome.exe`, create the isolated project-local profile directory `frontend/.logo-chrome-profile`, and run:
+Resolve Chrome from the verified installed path `C:\Program Files (x86)\Google\Chrome\Application\chrome.exe`, create the isolated project-local profile directory `frontend/.logo-chrome-profile`, and run:
 
 ```powershell
-& 'C:\Program Files\Google\Chrome\Application\chrome.exe' --headless=new --disable-gpu --hide-scrollbars --force-device-scale-factor=1 --window-size=512,512 --user-data-dir="$PWD\frontend\.logo-chrome-profile" --screenshot="$PWD\frontend\public\scopeseal-logo-512.png" "file:///$($PWD.Path.Replace('\','/'))/frontend/public/scopeseal-logo.svg"
+& 'C:\Program Files (x86)\Google\Chrome\Application\chrome.exe' --headless=new --disable-gpu --hide-scrollbars --force-device-scale-factor=1 --window-size=512,512 --user-data-dir="$PWD\frontend\.logo-chrome-profile" --screenshot="$PWD\frontend\public\scopeseal-logo-512.png" "file:///$($PWD.Path.Replace('\','/'))/frontend/public/scopeseal-logo.svg"
 ```
 
 Verify the resolved temporary profile path starts with the exact project root, then delete only `frontend/.logo-chrome-profile`.

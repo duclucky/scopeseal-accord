@@ -25,7 +25,14 @@ export function AppShell() {
       </a>
       <header className="site-header">
         <NavLink className="brand" to="/" aria-label="ScopeSeal Accord home">
-          <span className="brand-mark" aria-hidden="true">S</span>
+          <img
+            className="brand-mark"
+            src="/scopeseal-logo.svg"
+            alt=""
+            aria-hidden="true"
+            width="32"
+            height="32"
+          />
           <span>ScopeSeal Accord</span>
         </NavLink>
         <div className="header-actions">

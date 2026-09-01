@@ -27,6 +27,17 @@ describe("ScopeSeal product experience", () => {
     );
   });
 
+  it("uses the approved decorative logo without duplicating the brand name", () => {
+    renderAt("/");
+
+    const brand = screen.getByRole("link", { name: "ScopeSeal Accord home" });
+    const logo = brand.querySelector("img");
+    expect(logo).toHaveAttribute("src", "/scopeseal-logo.svg");
+    expect(logo).toHaveAttribute("alt", "");
+    expect(logo).toHaveAttribute("width", "32");
+    expect(logo).toHaveAttribute("height", "32");
+  });
+
   it("explains the trust job and offers a real next destination", () => {
     renderAt("/");
 
