@@ -5,6 +5,7 @@ import {
   deploymentDecision,
   isSuccessfulFinalizedReceipt,
   mergeEnvironment,
+  quarantineDecision,
   retryDecision,
   retirementDecision,
   safeReceiptProjection,
@@ -69,6 +70,7 @@ test("deployment identity resumes only the exact active revision", () => {
   assert.equal(deploymentDecision({ ...current, result: "SUCCESS", active: true, contractAddress: "0xcontract" }, current), "RESUME");
   assert.equal(deploymentDecision({ ...current, sourceSha256: "changed", result: "SUCCESS", active: true, contractAddress: "0xcontract" }, current), "REFUSE");
   assert.equal(deploymentDecision({ ...current, sourceSha256: "old", result: "RETIRED", active: false, remainingAccountingZero: true, contractAddress: "0xcontract" }, current), "REPLACE");
+  assert.equal(deploymentDecision({ ...current, sourceSha256: "old", result: "QUARANTINED", active: false, recoveryPending: true, closePathDefined: true, contractAddress: "0xcontract" }, current), "REPLACE");
 });
 
 
@@ -134,5 +136,28 @@ test("superseded revision retires only after expiry and zero accounting", () => 
   assert.deepEqual(
     retirementDecision({ ...agreement, state: "CLOSED" }, { received_gen: 2, locked_gen: 1, credited_gen: 0, withdrawn_gen: 1 }),
     { action: "REFUSE_NONZERO" },
+  );
+});
+
+
+test("a failed active revision is quarantined only with a bounded recovery path", () => {
+  const agreement = {
+    state: "RETRYABLE",
+    reviewDeadline: "2026-09-02T04:43:23Z",
+    attemptCount: 2,
+  };
+  const accounting = { received_gen: 2, locked_gen: 2, credited_gen: 0, withdrawn_gen: 0 };
+  const attempt = { attemptNumber: 2, sourceStatus: "UNAVAILABLE", aggregateVerdict: "UNVERIFIABLE" };
+  assert.deepEqual(
+    quarantineDecision(agreement, accounting, attempt),
+    { action: "QUARANTINE", recoveryAvailableAt: "2026-09-02T04:43:23Z" },
+  );
+  assert.deepEqual(
+    quarantineDecision(agreement, { ...accounting, credited_gen: 1 }, attempt),
+    { action: "REFUSE" },
+  );
+  assert.deepEqual(
+    quarantineDecision(agreement, accounting, { ...attempt, attemptNumber: 1 }),
+    { action: "REFUSE" },
   );
 });

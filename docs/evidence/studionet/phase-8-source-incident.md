@@ -61,6 +61,10 @@ accounting: credited_gen=0, locked_gen=2, received_gen=2, withdrawn_gen=0
 ```
 
 The retirement command cannot send recovery early. At or after the deadline it will recover the expired agreement,
-withdraw the sponsor credit, require locked and credited accounting to be zero with received equal to withdrawn, and
-archive the deployment/lifecycle evidence before a replacement deployment is allowed. Until that output is real,
-the replacement deployment and completed lifecycle remain unclaimed.
+withdraw the sponsor credit, and require locked and credited accounting to be zero with received equal to withdrawn.
+
+The failed revision may be quarantined from the active project slot before that deadline only when canonical state is
+exactly `RETRYABLE`, the latest attempt is the matching `UNAVAILABLE`/`UNVERIFIABLE` attempt, accounting is exactly
+received 2 GEN, locked 2 GEN, credited 0 GEN, withdrawn 0 GEN, and the archived recovery command remains configured.
+This permits the corrected revision to become active without presenting the failed address as part of the product.
+It does not waive the outstanding 2 GEN recovery proof required before final project acceptance.

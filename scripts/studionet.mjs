@@ -1,6 +1,6 @@
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -178,6 +178,14 @@ export function deploymentDecision(existing, current) {
   if (existing.active === false && existing.result === "RETIRED" && existing.remainingAccountingZero === true) {
     return "REPLACE";
   }
+  if (
+    existing.active === false
+    && existing.result === "QUARANTINED"
+    && existing.recoveryPending === true
+    && existing.closePathDefined === true
+  ) {
+    return "REPLACE";
+  }
   const identical = IDENTITY_KEYS.every((key) => existing[key] === current[key]);
   if (identical && existing.active === true && existing.result === "SUCCESS" && existing.contractAddress) return "RESUME";
   return "REFUSE";
@@ -237,6 +245,27 @@ export function retirementDecision(agreement, accounting, now = new Date().toISO
       : { action: "WAIT", availableAt };
   }
   return { action: "REFUSE_NONZERO" };
+}
+
+
+export function quarantineDecision(agreement, accounting, attempt) {
+  if (
+    agreement?.state !== "RETRYABLE"
+    || !agreement.reviewDeadline
+    || Number(attempt?.attemptNumber) !== Number(agreement.attemptCount)
+    || attempt?.sourceStatus !== "UNAVAILABLE"
+    || attempt?.aggregateVerdict !== "UNVERIFIABLE"
+  ) {
+    return { action: "REFUSE" };
+  }
+  const received = BigInt(accounting?.received_gen ?? -1);
+  const locked = BigInt(accounting?.locked_gen ?? -1);
+  const credited = BigInt(accounting?.credited_gen ?? -1);
+  const withdrawn = BigInt(accounting?.withdrawn_gen ?? -1);
+  if (received !== 2n || locked !== 2n || credited !== 0n || withdrawn !== 0n) {
+    return { action: "REFUSE" };
+  }
+  return { action: "QUARANTINE", recoveryAvailableAt: agreement.reviewDeadline };
 }
 
 
@@ -512,7 +541,18 @@ function lifecycleFile(deployment, clients) {
     transactions: [],
   };
   const existing = readJson(LIFECYCLE_PATH, undefined);
-  return existing?.retired === true ? fresh : (existing ?? fresh);
+  return existing?.retired === true || existing?.archived === true ? fresh : (existing ?? fresh);
+}
+
+
+function archivePaths(contractAddress) {
+  const directory = join(ARCHIVE_DIR, contractAddress.toLowerCase());
+  return {
+    directory,
+    deployment: join(directory, "deployment.json"),
+    lifecycle: join(directory, "lifecycle.json"),
+    relative: `archive/${contractAddress.toLowerCase()}`,
+  };
 }
 
 
@@ -523,7 +563,7 @@ function actorClient(clients, actor) {
 }
 
 
-async function reconcilePending(file, clients, deployment) {
+async function reconcilePending(file, clients, deployment, lifecyclePath = LIFECYCLE_PATH) {
   if (!file.pendingTransaction) return canonicalState(clients, deployment);
   const pending = file.pendingTransaction;
   const client = actorClient(clients, pending.actor);
@@ -540,12 +580,14 @@ async function reconcilePending(file, clients, deployment) {
     canonicalAfter: after,
   });
   file.pendingTransaction = null;
-  writeJson(LIFECYCLE_PATH, file);
+  writeJson(lifecyclePath, file);
   return after;
 }
 
 
-async function lifecycleWrite({ file, clients, deployment, action, actor, functionName, args, valueGEN = "0" }) {
+async function lifecycleWrite({
+  file, clients, deployment, action, actor, functionName, args, valueGEN = "0", lifecyclePath = LIFECYCLE_PATH,
+}) {
   const client = actorClient(clients, actor);
   await client.initializeConsensusSmartContract();
   const hash = await client.writeContract({
@@ -561,9 +603,9 @@ async function lifecycleWrite({ file, clients, deployment, action, actor, functi
     submittedAt: new Date().toISOString(),
     valueGEN,
   };
-  writeJson(LIFECYCLE_PATH, file);
+  writeJson(lifecyclePath, file);
   console.log(JSON.stringify({ stage: "SUBMITTED", action, actor, valueGEN, transactionHash: hash }, null, 2));
-  return reconcilePending(file, clients, deployment);
+  return reconcilePending(file, clients, deployment, lifecyclePath);
 }
 
 
@@ -688,6 +730,166 @@ async function recover() {
 }
 
 
+async function quarantine() {
+  const clients = await roleClients(true);
+  const deployment = readJson(DEPLOYMENT_PATH, undefined);
+  if (!deployment?.active || deployment.result !== "SUCCESS" || !deployment.contractAddress) {
+    throw new Error("No active successful deployment is available to quarantine.");
+  }
+  const file = lifecycleFile(deployment, clients);
+  if (file.contractAddress !== deployment.contractAddress) {
+    throw new Error("Quarantine evidence does not match the active deployment.");
+  }
+  const state = await reconcilePending(file, clients, deployment);
+  const agreement = state.agreement;
+  const rawAttempt = await readView(
+    clients.readClient,
+    deployment.contractAddress,
+    "get_review_attempt",
+    [file.agreementId, agreement?.attemptCount ?? 0],
+  );
+  const attempt = {
+    attemptNumber: Number(field(rawAttempt, "attempt_number", "attemptNumber") ?? 0),
+    sourceStatus: field(rawAttempt, "source_status", "sourceStatus") ?? "UNKNOWN",
+    aggregateVerdict: field(rawAttempt, "aggregate_verdict", "aggregateVerdict") ?? "UNKNOWN",
+  };
+  const decision = quarantineDecision(agreement, state.accounting, attempt);
+  if (decision.action !== "QUARANTINE") {
+    throw new Error("Quarantine refused because canonical state or accounting is not the bounded failed-source case.");
+  }
+  const quarantinedAt = new Date().toISOString();
+  const paths = archivePaths(deployment.contractAddress);
+  const archivedDeployment = {
+    ...deployment,
+    active: false,
+    result: "QUARANTINED",
+    quarantinedAt,
+    recoveryPending: true,
+    recoveryAvailableAt: decision.recoveryAvailableAt,
+    closePathDefined: true,
+    remainingAccountingZero: false,
+  };
+  const archivedLifecycle = {
+    ...file,
+    quarantinedAt,
+    recoveryPending: true,
+    currentCanonical: state,
+  };
+  writeJson(paths.deployment, archivedDeployment);
+  writeJson(paths.lifecycle, archivedLifecycle);
+  writeJson(DEPLOYMENT_PATH, archivedDeployment);
+  writeJson(LIFECYCLE_PATH, {
+    archived: true,
+    quarantinedAt,
+    contractAddress: deployment.contractAddress,
+    archive: paths.relative,
+    recoveryPending: true,
+  });
+  console.log(JSON.stringify({
+    Result: "QUARANTINED",
+    contractAddress: deployment.contractAddress,
+    recoveryPending: true,
+    recoveryAvailableAt: decision.recoveryAvailableAt,
+    remainingAccountingZero: false,
+    accounting: state.accounting,
+    archive: paths.relative,
+  }, null, 2));
+}
+
+
+function pendingSupersededDeployments() {
+  if (!existsSync(ARCHIVE_DIR)) return [];
+  const results = [];
+  for (const entry of readdirSync(ARCHIVE_DIR, { withFileTypes: true })) {
+    if (!entry.isDirectory()) continue;
+    const paths = archivePaths(entry.name);
+    const deployment = readJson(paths.deployment, undefined);
+    if (deployment?.result === "QUARANTINED" && deployment.recoveryPending === true) {
+      results.push({ paths, deployment });
+    }
+  }
+  return results;
+}
+
+
+async function recoverSuperseded() {
+  const clients = await roleClients(true);
+  const pending = pendingSupersededDeployments();
+  if (pending.length === 0) {
+    console.log(JSON.stringify({ Result: "NO_PENDING_SUPERSEDED_DEPLOYMENT" }, null, 2));
+    return;
+  }
+  if (pending.length > 1) {
+    throw new Error("More than one superseded deployment needs recovery; recover one explicit archive at a time.");
+  }
+  const { paths, deployment } = pending[0];
+  if (
+    deployment.sponsor.toLowerCase() !== clients.sponsorAccount.address.toLowerCase()
+    || deployment.contractor.toLowerCase() !== clients.contractorAccount.address.toLowerCase()
+  ) {
+    throw new Error("Superseded deployment actors do not match the authorized signers.");
+  }
+  const file = readJson(paths.lifecycle, undefined);
+  if (!file || file.contractAddress !== deployment.contractAddress) {
+    throw new Error("Superseded lifecycle archive is absent or mismatched.");
+  }
+  let state = await reconcilePending(file, clients, deployment, paths.lifecycle);
+  for (let step = 0; step < 4; step += 1) {
+    const decision = retirementDecision(state.agreement, state.accounting);
+    if (decision.action === "WAIT") {
+      console.log(JSON.stringify({
+        Result: "WAIT_FOR_SUPERSEDED_EXPIRY",
+        contractAddress: deployment.contractAddress,
+        availableAt: decision.availableAt,
+        accounting: state.accounting,
+      }, null, 2));
+      return;
+    }
+    if (decision.action === "RECOVER") {
+      state = await lifecycleWrite({
+        file, clients, deployment, action: "RECOVER_EXPIRED", actor: "sponsor",
+        functionName: "recover_expired", args: [file.agreementId], lifecyclePath: paths.lifecycle,
+      });
+      continue;
+    }
+    if (decision.action === "WITHDRAW_CONTRACTOR" || decision.action === "WITHDRAW_SPONSOR") {
+      const actor = decision.action === "WITHDRAW_CONTRACTOR" ? "contractor" : "sponsor";
+      state = await lifecycleWrite({
+        file, clients, deployment, action: decision.action, actor,
+        functionName: "withdraw_credit", args: [file.agreementId], lifecyclePath: paths.lifecycle,
+      });
+      continue;
+    }
+    if (decision.action === "ARCHIVE") {
+      const recoveredAt = new Date().toISOString();
+      const recoveredDeployment = {
+        ...deployment,
+        result: "RETIRED",
+        recoveryPending: false,
+        recoveredAt,
+        remainingAccountingZero: true,
+      };
+      writeJson(paths.deployment, recoveredDeployment);
+      writeJson(paths.lifecycle, {
+        ...file,
+        recoveryPending: false,
+        recoveredAt,
+        finalCanonical: state,
+      });
+      console.log(JSON.stringify({
+        Result: "SUPERSEDED_RECOVERED",
+        contractAddress: deployment.contractAddress,
+        remainingAccountingZero: true,
+        accounting: state.accounting,
+      }, null, 2));
+      return;
+    }
+    throw new Error("Superseded recovery refused because canonical accounting is not safely recoverable.");
+  }
+  throw new Error("Superseded recovery exceeded the bounded four-step limit.");
+}
+
+
 async function retire() {
   const clients = await roleClients(true);
   const deployment = readJson(DEPLOYMENT_PATH, undefined);
@@ -770,7 +972,9 @@ async function main() {
   else if (command === "retry") await retryLifecycle();
   else if (command === "recover") await recover();
   else if (command === "retire") await retire();
-  else throw new Error("Usage: node scripts/studionet.mjs <inspect|deploy|lifecycle|retry|recover|retire>");
+  else if (command === "quarantine") await quarantine();
+  else if (command === "recover-superseded") await recoverSuperseded();
+  else throw new Error("Usage: node scripts/studionet.mjs <inspect|deploy|lifecycle|retry|recover|retire|quarantine|recover-superseded>");
 }
 
 

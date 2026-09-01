@@ -92,6 +92,9 @@ exactly 2 GEN.
 - A `RETRYABLE` review is not replayed by the normal lifecycle command. `studionet:retry` reads the current attempt
   number dynamically and permits retry only when that exact attempt reports transient `UNAVAILABLE`; structural
   `INVALID` results are refused.
+- A failed source revision can leave the active slot only through `studionet:quarantine`, which requires the exact
+  non-penalizing retry state and 2/2/0/0 GEN accounting. `studionet:recover-superseded` later enforces expiry,
+  recovery, withdrawal, and zero remaining accounting against the archived address.
 - Evidence files contain safe projections and canonical views, never complete receipts.
 
 ## Dependency audit note

@@ -9,8 +9,9 @@ Network policy: **Studionet**, as locked by workspace decision D1
 
 Phase 4 remains locked. The contract, direct tests, deployment tooling and frontend integration are implemented. The
 first Studionet revision safely finalized two unavailable-source attempts without consequence; its 2 GEN remains
-locked until the canonical recovery deadline. A bounded query fix is locally verified, but a replacement revision is
-not deployed until the superseded revision is recovered, withdrawn and proven to have zero remaining accounting.
+locked until the canonical recovery deadline. A bounded query fix is locally verified. The failed revision is
+quarantined from the active deployment slot with an explicit archived recovery path; final project acceptance still
+requires its accounting to be recovered and proven zero.
 
 ## Identity
 
