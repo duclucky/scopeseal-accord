@@ -31,7 +31,7 @@ The Python and JavaScript projections cover raw Studio and normalized SDK receip
 transaction hash, status, execution result, consensus result and contract address. Raw receipt, validator
 configuration, trace, stdout and stderr are never persisted.
 
-## Current SDK network metadata
+## Current network metadata
 
 Command:
 
@@ -39,16 +39,19 @@ Command:
 node --input-type=module -e "import { studionet } from 'genlayer-js/chains'; ..."
 ```
 
-Real selected output from pinned `genlayer-js@1.1.8`:
+Real selected chain/RPC output from pinned `genlayer-js@1.1.8`:
 
 ```json
 {
   "id": 61999,
   "name": "Genlayer Studio Network",
-  "rpcUrls": { "default": { "http": ["https://studio.genlayer.com/api"] } },
-  "blockExplorers": { "default": { "url": "https://genlayer-explorer.vercel.app" } }
+  "rpcUrls": { "default": { "http": ["https://studio.genlayer.com/api"] } }
 }
 ```
+
+The current official Networks documentation was rechecked on 2026-09-01 and is authoritative for the public
+Explorer URL: `https://explorer-studio.genlayer.com`. The operational scripts and frontend use that URL. The
+Explorer URL bundled in `genlayer-js@1.1.8` was not treated as current network authority.
 
 ## Authorized signer and live RPC inspection
 

@@ -16,7 +16,7 @@ export const STUDIONET_WALLET_CHAIN: WalletChain = {
   nativeCurrency: { name: "GEN", symbol: "GEN", decimals: 18 },
   rpcUrls: configuredWalletRpc ? [configuredWalletRpc] : [],
   blockExplorerUrls: [
-    import.meta.env.VITE_GENLAYER_EXPLORER_URL?.trim() || "https://genlayer-explorer.vercel.app",
+    import.meta.env.VITE_GENLAYER_EXPLORER_URL?.trim() || "https://explorer-studio.genlayer.com",
   ],
 };
 
