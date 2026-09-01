@@ -59,3 +59,22 @@ checks; the response body was not modified.
 There was no browser `Failed to fetch`, CORS error, horizontal overflow, or simulated contract state. The connected
 role remained honestly `Observer` because no wallet was connected. Browser wallet signing remains a separate proof;
 the script-signed Studionet lifecycle is not presented as browser-wallet evidence.
+
+## Listing/logo production release - 2026-09-01
+
+- Source commit: `37634ffd65fb671c50e57ff4610abb4e783d900d`
+- Successful CI: https://github.com/duclucky/scopeseal-accord/actions/runs/33490807219
+- CI result: `success`; verify job completed in 5m33s
+- Vercel deployment ID: `dpl_CYfKYJwtYnjNfzC4qN19bkTLpweR`
+- Production deployment: https://scopeseal-accord-meoze1le6-duckys-projects-bc83c6a0.vercel.app
+- Production alias: https://scopeseal-accord.vercel.app
+- Vercel result: `READY`
+
+Fresh HTTP checks returned 200 for the production root, agreement `scopeseal-browser-002`,
+`/scopeseal-logo.svg`, `/scopeseal-logo-512.png`, the active contract explorer page, and all six finalized
+transaction explorer pages listed in the Phase 15 browser evidence. The PNG response was `image/png` and 20,454 bytes.
+
+The user-controlled Chrome session then verified the production agreement at 1440 x 900 and 390 x 844. At both
+sizes the logo rendered at 32 x 32 without horizontal overflow. The canonical card read `CLOSED`, `NEGOTIATED`,
+0 GEN locked, 0 GEN sponsor credit, and 0 GEN contractor credit. The browser console contained zero warning/error
+entries after the check. No transaction was sent during this read-only production verification.

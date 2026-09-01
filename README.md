@@ -9,7 +9,8 @@ a separate, user-authorized action.
 
 - Live app: https://scopeseal-accord.vercel.app
 - Active contract: https://explorer-studio.genlayer.com/address/0x8837Acc0F7E1C73Af0ee7A630D85f8DfD613E879
-- CI: https://github.com/duclucky/scopeseal-accord/actions/workflows/ci.yml
+- Successful CI for the listing/browser release: https://github.com/duclucky/scopeseal-accord/actions/runs/33490807219
+- CI workflow: https://github.com/duclucky/scopeseal-accord/actions/workflows/ci.yml
 - Lifecycle evidence: [active Studionet lifecycle](docs/evidence/studionet/phase-8-active-lifecycle.md)
 - Browser-wallet evidence: [Chrome/OKX lifecycle](docs/evidence/frontend/phase-15-browser-wallet-lifecycle.md)
 - Copy-ready listing: [Projects listing packet](docs/submission/project-listing.md)

@@ -9,6 +9,7 @@
 - **One-liner:** Turn an official procurement amendment into a neutral, funded change-order decision instead of letting either party interpret scope alone.
 - **Website:** https://scopeseal-accord.vercel.app
 - **Repository:** https://github.com/duclucky/scopeseal-accord
+- **Successful CI:** https://github.com/duclucky/scopeseal-accord/actions/runs/33490807219
 - **Contract:** https://explorer-studio.genlayer.com/address/0x8837Acc0F7E1C73Af0ee7A630D85f8DfD613E879
 
 ## Short description
