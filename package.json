@@ -1,0 +1,24 @@
+{
+  "name": "scopeseal-accord",
+  "version": "0.1.0",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "check": "powershell -ExecutionPolicy Bypass -File scripts/check.ps1",
+    "check:contract": "set PYTHONUTF8=1&& .venv\\Scripts\\genvm-lint.exe check contracts/scopeseal_accord.py",
+    "check:tests": ".venv\\Scripts\\python.exe -m pytest tests -q",
+    "check:deployment": "node --test tests/deployment/*.test.mjs",
+    "check:frontend": "cd frontend && npm test && npm run typecheck && npm run build",
+    "studionet:inspect": "node scripts/studionet.mjs inspect",
+    "studionet:deploy": "node scripts/studionet.mjs deploy",
+    "studionet:lifecycle": "node scripts/studionet.mjs lifecycle",
+    "studionet:recover": "node scripts/studionet.mjs recover"
+  },
+  "dependencies": {
+    "genlayer-js": "1.1.8"
+  },
+  "devDependencies": {
+    "genlayer": "0.39.2"
+  }
+}
