@@ -70,9 +70,16 @@ FE-PRESERVE remained in force: integration added only canonical data cards, lega
 network health indicator. The locked typography, palette, navigation, layout hierarchy and responsive breakpoints
 were not redesigned.
 
+For production, `frontend/api/genlayer-rpc.js` forwards only `eth_chainId` and `gen_call` to the official Studionet
+IC RPC. It refuses wallet write methods, batch/invalid payloads, and oversized requests; it does not log upstream
+payloads. `frontend/vercel.json` rewrites `/genlayer-rpc` to that serverless handler and preserves SPA routes. Node
+tests prove a read is forwarded and `eth_sendRawTransaction` is rejected with HTTP 403. A live Vercel browser probe
+is still required before this production path is claimed complete.
+
 ## Honest boundary
 
 - Browser-local RPC/CORS behavior: verified.
+- Production same-origin proxy behavior: locally tested; live deployment proof pending.
 - EIP-6963 selection, injected fallbacks, centered modal and disconnect: verified by frontend tests and browser layout.
 - Real browser wallet signature: pending a configured deployment and user wallet environment.
 - Accepted/finalized browser transaction and post-finality canonical reload against Studionet: pending the network
