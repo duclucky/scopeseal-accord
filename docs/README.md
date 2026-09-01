@@ -1,6 +1,6 @@
 # ScopeSeal Accord project specification
 
-Status: **IMPLEMENTED / STUDIONET REVISION RECOVERY PENDING**
+Status: **IMPLEMENTED / ACTIVE STUDIONET LIFECYCLE COMPLETE**
 
 Track: **Projects**
 
@@ -12,7 +12,11 @@ two Studionet revisions safely finalized non-penalizing source/schema failures w
 semantic prompt root causes are locally fixed. At the user's direction, both failed testnet revisions and their test
 GEN purses are marked `ABANDONED_TESTNET`, excluded from the active product, and will not be recovered. This is an
 explicit exception to the workspace superseded-accounting policy and remains a blocker for an exact `NO BLOCKER`
-acceptance claim; it does not block completion of the new active revision.
+acceptance claim. The new active revision independently completed its intended lifecycle.
+
+Active contract: `0x8837Acc0F7E1C73Af0ee7A630D85f8DfD613E879` on Studionet. Its official review finalized
+`WITHIN_BASELINE`, contractor withdrawal transferred 2 GEN, and canonical accounting closed at received 2 GEN,
+withdrawn 2 GEN, locked 0 GEN, credited 0 GEN.
 
 ## Identity
 
@@ -431,12 +435,12 @@ Downstream municipal payment platforms, infrastructure co-funders and change-ord
 
 ## Honest limitations
 
-The contract and frontend are locally verified, and the first Studionet contract deployment is real. CREATE, RATIFY,
-and two non-penalizing REVIEW attempts finalized successfully at the transaction layer; both reviews recorded official
-source `UNAVAILABLE`, `UNVERIFIABLE`, and left canonical accounting at received 2 GEN, locked 2 GEN, credited 0 GEN,
-withdrawn 0 GEN. No successful verdict, settlement, withdrawal, browser wallet write, public GitHub repository, live
-frontend, external adoption, or Portal acceptance is claimed yet. The replacement source query is locally proven
-against the official named graphs, but network proof remains pending retirement of the first revision.
+The active contract, frontend, and 2 GEN Studionet lifecycle are verified. The active lifecycle finalized CREATE,
+RATIFY, official REVIEW, and contractor WITHDRAW; canonical state is `CLOSED`, verdict `WITHIN_BASELINE`, with received
+2 GEN, withdrawn 2 GEN, locked 0 GEN, and credited 0 GEN. Two earlier failed testnet revisions are excluded as
+`ABANDONED_TESTNET` with their test purses intentionally unrecovered at the user's direction; this is not claimed as
+superseded-accounting compliance. Browser wallet write, public GitHub repository, live frontend, external adoption,
+and Portal acceptance remain pending at this point in the evidence sequence.
 
 ## Kill criteria
 
