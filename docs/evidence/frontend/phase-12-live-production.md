@@ -39,6 +39,23 @@ scrollWidth: 1265
 console warning/error entries: []
 ```
 
+Phase 13 shell exit checks also reached the production alias directly:
+
+```text
+curl.exe -sS -I https://scopeseal-accord.vercel.app
+HTTP/1.1 200 OK
+Content-Type: text/html; charset=utf-8
+Server: Vercel
+
+curl.exe -sS https://scopeseal-accord.vercel.app
+HAS_TITLE=True
+HAS_REACT_ROOT=True
+```
+
+The returned document contained `<title>ScopeSeal Accord</title>` and `<div id="root"></div>`. PowerShell returned
+the response as 14 lines (`System.Object[]`), so the verification joined those lines before applying the two string
+checks; the response body was not modified.
+
 There was no browser `Failed to fetch`, CORS error, horizontal overflow, or simulated contract state. The connected
 role remained honestly `Observer` because no wallet was connected. Browser wallet signing remains a separate proof;
 the script-signed Studionet lifecycle is not presented as browser-wallet evidence.

@@ -6,6 +6,7 @@ Status: **PASS - active lifecycle finalized and closed**
 
 - Active contract: `0x8837Acc0F7E1C73Af0ee7A630D85f8DfD613E879`
 - Deployment transaction: `0xaa433850639827aebb7a3c7b766b8bf78c30f2806d2f26f92ea0004e32cdcac3`
+- Result: SUCCESS
 - Agreement: `scopeseal-official-001`
 - Demo value: exactly 2 GEN
 - Final verdict: `WITHIN_BASELINE`

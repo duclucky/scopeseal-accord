@@ -15,5 +15,8 @@ coverage/
 .vercel/
 artifacts/
 *.log
+/precheck-report.txt
+/precheck-report.json
+/grade-report.json
 docs/evidence/studionet/private/
 docs/evidence/browser/private/
