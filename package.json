@@ -13,6 +13,7 @@
     "studionet:inspect": "node scripts/studionet.mjs inspect",
     "studionet:deploy": "node scripts/studionet.mjs deploy",
     "studionet:lifecycle": "node scripts/studionet.mjs lifecycle",
+    "studionet:retry": "node scripts/studionet.mjs retry",
     "studionet:recover": "node scripts/studionet.mjs recover"
   },
   "dependencies": {
