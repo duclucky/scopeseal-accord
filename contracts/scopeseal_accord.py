@@ -144,6 +144,11 @@ def _single_binding(payload: dict, expected_keys: set[str]):
     return normalized
 
 
+def _publication_graph(publication: str) -> str:
+    year = publication[9:]
+    return "http://data.europa.eu/a4g/resource/" + year + "/" + publication[:8] + "_" + year
+
+
 def _original_query_url(publication: str) -> str:
     query = (
         "PREFIX epo: <http://data.europa.eu/a4g/ontology#> "
@@ -151,13 +156,13 @@ def _original_query_url(publication: str) -> str:
         "PREFIX skos: <http://www.w3.org/2004/02/skos/core#> "
         "PREFIX dct: <http://purl.org/dc/terms/> "
         "SELECT ?publication ?notice_uuid ?notice_version ?buyer_legal_id ?procedure_id ?contract_id ?title ?description WHERE { "
-        "GRAPH ?g { ?notice epo:hasNoticePublicationNumber \"" + publication + "\" ; "
+        "GRAPH <" + _publication_graph(publication) + "> { ?notice epo:hasNoticePublicationNumber \"" + publication + "\" ; "
         "adms:identifier/skos:notation ?notice_uuid ; epo:hasVersion ?notice_version ; "
         "epo:refersToProcedure ?procedure ; epo:refersToRole ?buyer_role . "
         "?buyer_role a epo:Buyer ; epo:playedBy ?buyer_org . "
         "?buyer_org epo:hasLegalIdentifier/skos:notation ?buyer_legal_id . "
         "?procedure adms:identifier/skos:notation ?procedure_id ; dct:title ?title ; dct:description ?description . "
-        "?contract a epo:SettledContract ; adms:identifier/skos:notation ?contract_id . "
+        "?contract a epo:Contract ; adms:identifier/skos:notation ?contract_id . "
         "FILTER(lang(?title) = \"\" || lang(?title) = \"en\") "
         "FILTER(lang(?description) = \"\" || lang(?description) = \"en\") "
         "BIND(\"" + publication + "\" AS ?publication) } }"
@@ -172,7 +177,7 @@ def _modification_query_url(publication: str) -> str:
         "PREFIX skos: <http://www.w3.org/2004/02/skos/core#> "
         "PREFIX dct: <http://purl.org/dc/terms/> "
         "SELECT ?publication ?notice_version ?form_type ?previous_notice_binding ?buyer_legal_id ?procedure_id ?contract_id ?title ?description ?modification_description ?modification_reason ?justification WHERE { "
-        "GRAPH ?g { ?notice epo:hasNoticePublicationNumber \"" + publication + "\" ; "
+        "GRAPH <" + _publication_graph(publication) + "> { ?notice epo:hasNoticePublicationNumber \"" + publication + "\" ; "
         "epo:hasVersion ?notice_version ; epo:hasFormType ?form_uri ; epo:refersToPrevious/adms:identifier/skos:notation ?previous_notice_binding ; "
         "epo:refersToProcedure ?procedure ; epo:refersToContractToBeModified ?contract ; epo:refersToRole ?buyer_role ; epo:announcesContractAmendment ?amendment . "
         "?buyer_role a epo:Buyer ; epo:playedBy ?buyer_org . ?buyer_org epo:hasLegalIdentifier/skos:notation ?buyer_legal_id . "

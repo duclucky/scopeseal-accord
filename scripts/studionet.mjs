@@ -13,6 +13,7 @@ const EVIDENCE_DIR = join(PROJECT_ROOT, "docs", "evidence", "studionet");
 const DEPLOYMENT_PATH = join(EVIDENCE_DIR, "deployment.json");
 const DEPLOYMENT_ATTEMPTS_PATH = join(EVIDENCE_DIR, "deployment-attempts.json");
 const LIFECYCLE_PATH = join(EVIDENCE_DIR, "lifecycle.json");
+const ARCHIVE_DIR = join(EVIDENCE_DIR, "archive");
 const RPC_URL = "https://studio.genlayer.com/api";
 const EXPLORER_URL = "https://explorer-studio.genlayer.com";
 const CHAIN_ID = 61999;
@@ -174,6 +175,9 @@ export function valueForCreateAgreement() {
 
 export function deploymentDecision(existing, current) {
   if (!existing) return "DEPLOY";
+  if (existing.active === false && existing.result === "RETIRED" && existing.remainingAccountingZero === true) {
+    return "REPLACE";
+  }
   const identical = IDENTITY_KEYS.every((key) => existing[key] === current[key]);
   if (identical && existing.active === true && existing.result === "SUCCESS" && existing.contractAddress) return "RESUME";
   return "REFUSE";
@@ -198,6 +202,41 @@ export function retryDecision(agreement, attempt) {
   if (Number(attempt.attemptNumber) !== Number(agreement.attemptCount)) return "REFUSE_MISMATCH";
   if (attempt.sourceStatus === "UNAVAILABLE") return "RETRY_TRANSIENT";
   return "REFUSE_STRUCTURAL";
+}
+
+
+export function retirementDecision(agreement, accounting, now = new Date().toISOString()) {
+  if (!agreement || !accounting) return { action: "REFUSE_NONZERO" };
+  if (agreement.state === "CLOSED") {
+    const keys = ["received_gen", "locked_gen", "credited_gen", "withdrawn_gen"];
+    if (keys.some((key) => accounting[key] === undefined || accounting[key] === null)) {
+      return { action: "REFUSE_NONZERO" };
+    }
+    const received = BigInt(accounting.received_gen);
+    const locked = BigInt(accounting.locked_gen);
+    const credited = BigInt(accounting.credited_gen);
+    const withdrawn = BigInt(accounting.withdrawn_gen);
+    return locked === 0n && credited === 0n && received === withdrawn
+      ? { action: "ARCHIVE" }
+      : { action: "REFUSE_NONZERO" };
+  }
+  if (agreement.state === "SETTLED") {
+    if (Number(agreement.contractorCreditGen) > 0) return { action: "WITHDRAW_CONTRACTOR" };
+    if (Number(agreement.sponsorCreditGen) > 0) return { action: "WITHDRAW_SPONSOR" };
+    return { action: "REFUSE_NONZERO" };
+  }
+  if (["DRAFT", "ACTIVE", "RETRYABLE", "NEGOTIATION"].includes(agreement.state)) {
+    const availableAt = agreement.state === "DRAFT"
+      ? agreement.ratifyDeadline
+      : agreement.state === "NEGOTIATION"
+        ? agreement.negotiationDeadline
+        : agreement.reviewDeadline;
+    if (!availableAt) return { action: "REFUSE_NONZERO" };
+    return Date.parse(now) >= Date.parse(availableAt)
+      ? { action: "RECOVER", availableAt }
+      : { action: "WAIT", availableAt };
+  }
+  return { action: "REFUSE_NONZERO" };
 }
 
 
@@ -303,6 +342,8 @@ function normalizedAgreement(value) {
     verdict: field(value, "verdict"),
     attemptCount: Number(field(value, "attempt_count", "attemptCount") ?? 0),
     modificationPublication: field(value, "modification_publication", "modificationPublication") ?? "",
+    ratifyDeadline: field(value, "ratify_deadline", "ratifyDeadline") ?? "",
+    reviewDeadline: field(value, "review_deadline", "reviewDeadline") ?? "",
     negotiationDeadline: field(value, "negotiation_deadline", "negotiationDeadline") ?? "",
     proposalNonce: Number(field(value, "proposal_nonce", "proposalNonce") ?? 0),
     hasProposal: Boolean(field(value, "has_proposal", "hasProposal")),
@@ -457,7 +498,7 @@ async function deploy() {
 
 
 function lifecycleFile(deployment, clients) {
-  return readJson(LIFECYCLE_PATH, {
+  const fresh = {
     network: "studionet",
     chainId: CHAIN_ID,
     agreementId: AGREEMENT_ID,
@@ -469,7 +510,9 @@ function lifecycleFile(deployment, clients) {
     valueGEN: "2",
     pendingTransaction: null,
     transactions: [],
-  });
+  };
+  const existing = readJson(LIFECYCLE_PATH, undefined);
+  return existing?.retired === true ? fresh : (existing ?? fresh);
 }
 
 
@@ -645,6 +688,80 @@ async function recover() {
 }
 
 
+async function retire() {
+  const clients = await roleClients(true);
+  const deployment = readJson(DEPLOYMENT_PATH, undefined);
+  if (!deployment?.active || deployment.result !== "SUCCESS" || !deployment.contractAddress) {
+    throw new Error("No active successful deployment is available to retire.");
+  }
+  const file = lifecycleFile(deployment, clients);
+  if (file.contractAddress !== deployment.contractAddress) {
+    throw new Error("Retirement evidence does not match the active deployment.");
+  }
+  let state = await reconcilePending(file, clients, deployment);
+  for (let step = 0; step < 4; step += 1) {
+    const decision = retirementDecision(state.agreement, state.accounting);
+    if (decision.action === "WAIT") {
+      console.log(JSON.stringify({
+        Result: "WAIT_FOR_EXPIRY",
+        contractAddress: deployment.contractAddress,
+        agreementId: file.agreementId,
+        canonicalState: state.agreement?.state ?? "ABSENT",
+        availableAt: decision.availableAt,
+        accounting: state.accounting,
+      }, null, 2));
+      return;
+    }
+    if (decision.action === "RECOVER") {
+      state = await lifecycleWrite({
+        file, clients, deployment, action: "RECOVER_EXPIRED", actor: "sponsor",
+        functionName: "recover_expired", args: [file.agreementId],
+      });
+      continue;
+    }
+    if (decision.action === "WITHDRAW_CONTRACTOR" || decision.action === "WITHDRAW_SPONSOR") {
+      const actor = decision.action === "WITHDRAW_CONTRACTOR" ? "contractor" : "sponsor";
+      state = await lifecycleWrite({
+        file, clients, deployment, action: decision.action, actor,
+        functionName: "withdraw_credit", args: [file.agreementId],
+      });
+      continue;
+    }
+    if (decision.action === "ARCHIVE") {
+      const retiredAt = new Date().toISOString();
+      const retiredDeployment = {
+        ...deployment,
+        active: false,
+        result: "RETIRED",
+        retiredAt,
+        remainingAccountingZero: true,
+      };
+      const retiredLifecycle = { ...file, retired: true, retiredAt, finalCanonical: state };
+      const archive = join(ARCHIVE_DIR, deployment.contractAddress.toLowerCase());
+      writeJson(join(archive, "deployment.json"), retiredDeployment);
+      writeJson(join(archive, "lifecycle.json"), retiredLifecycle);
+      writeJson(DEPLOYMENT_PATH, retiredDeployment);
+      writeJson(LIFECYCLE_PATH, {
+        retired: true,
+        retiredAt,
+        contractAddress: deployment.contractAddress,
+        archive,
+      });
+      console.log(JSON.stringify({
+        Result: "RETIRED",
+        contractAddress: deployment.contractAddress,
+        agreementId: file.agreementId,
+        remainingAccountingZero: true,
+        accounting: state.accounting,
+      }, null, 2));
+      return;
+    }
+    throw new Error("Retirement refused because canonical accounting is not safely recoverable.");
+  }
+  throw new Error("Retirement exceeded the bounded four-step limit.");
+}
+
+
 async function main() {
   const command = process.argv[2] ?? "inspect";
   if (command === "inspect") await inspect();
@@ -652,7 +769,8 @@ async function main() {
   else if (command === "lifecycle") await lifecycle();
   else if (command === "retry") await retryLifecycle();
   else if (command === "recover") await recover();
-  else throw new Error("Usage: node scripts/studionet.mjs <inspect|deploy|lifecycle|retry|recover>");
+  else if (command === "retire") await retire();
+  else throw new Error("Usage: node scripts/studionet.mjs <inspect|deploy|lifecycle|retry|recover|retire>");
 }
 
 

@@ -18,7 +18,7 @@ import type { DetectedWallet } from "./wallet/types";
 
 function RuntimeContractProvider({ children, override }: { children: ReactNode; override?: ContractAdapter }) {
   const { account, selectedWallet } = useWallet();
-  const address = import.meta.env.VITE_GENLAYER_CONTRACT_ADDRESS?.trim();
+  const address = import.meta.env.VITE_CONTRACT_ADDRESS?.trim();
   const [runtimeAdapter, setRuntimeAdapter] = useState<ContractAdapter>(override ?? unconfiguredContract);
   useEffect(() => {
     let active = true;

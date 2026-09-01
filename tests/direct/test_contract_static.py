@@ -118,6 +118,14 @@ def test_consensus_and_value_primitives_are_present(source: str) -> None:
     assert "gl.vm.run_nondet(" in source
     assert "run_nondet_unsafe" not in source
     assert "GEN_SCALE" in source
+
+
+def test_official_queries_are_bounded_to_the_publication_graph(source: str) -> None:
+    assert "def _publication_graph(publication: str) -> str:" in source
+    assert source.count('"GRAPH <" + _publication_graph(publication) + "> {') == 2
+    assert "GRAPH ?g" not in source
+    assert "?contract a epo:Contract" in source
+    assert "epo:SettledContract" not in source
     assert "gl.message.value" in source
     assert "emit_transfer(value=" in source
     assert "credit debited before transfer" in source

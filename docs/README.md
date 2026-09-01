@@ -1,20 +1,23 @@
 # ScopeSeal Accord project specification
 
-Status: **DESIGN**
+Status: **IMPLEMENTED / STUDIONET REVISION RECOVERY PENDING**
 
 Track: **Projects**
 
 Idea registry: **IDEA-021**
 Network policy: **Studionet**, as locked by workspace decision D1
 
-Phase 4 is locked. This specification defines the complete contract API, storage schema, safety cards, consensus prompt/output schema, accounting invariants and claim-to-code evidence rows before contract implementation.
+Phase 4 remains locked. The contract, direct tests, deployment tooling and frontend integration are implemented. The
+first Studionet revision safely finalized two unavailable-source attempts without consequence; its 2 GEN remains
+locked until the canonical recovery deadline. A bounded query fix is locally verified, but a replacement revision is
+not deployed until the superseded revision is recovered, withdrawn and proven to have zero remaining accounting.
 
 ## Identity
 
 - Project name: ScopeSeal Accord
 - Repository slug: `scopeseal-accord`
-- Primary contract class: planned `ScopeSealAccord`
-- Contract count: one planned validator-visible Intelligent Contract
+- Primary contract class: `ScopeSealAccord`
+- Contract count: one validator-visible Intelligent Contract
 - Category: Projects because the complete user-facing application is part of the contribution
 - Intended substantial milestone: Completion Closeout using official TED contract-completion notices and a retention-release lifecycle
 
@@ -426,7 +429,12 @@ Downstream municipal payment platforms, infrastructure co-funders and change-ord
 
 ## Honest limitations
 
-The product/frontend shell and Phase 4 design are locally verified, but no contract implementation, contract test result, Studionet address, public GitHub repository, live deployment, browser wallet write, finalized lifecycle, external adoption or Portal acceptance is claimed at DESIGN status. The SPARQL viability probe proves current official data availability and shape from this machine; it is not yet a GenVM network smoke test. Contract API behavior and all settlement claims remain pending test-first implementation and deployment evidence.
+The contract and frontend are locally verified, and the first Studionet contract deployment is real. CREATE, RATIFY,
+and two non-penalizing REVIEW attempts finalized successfully at the transaction layer; both reviews recorded official
+source `UNAVAILABLE`, `UNVERIFIABLE`, and left canonical accounting at received 2 GEN, locked 2 GEN, credited 0 GEN,
+withdrawn 0 GEN. No successful verdict, settlement, withdrawal, browser wallet write, public GitHub repository, live
+frontend, external adoption, or Portal acceptance is claimed yet. The replacement source query is locally proven
+against the official named graphs, but network proof remains pending retirement of the first revision.
 
 ## Kill criteria
 

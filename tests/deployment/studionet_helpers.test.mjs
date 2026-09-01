@@ -6,6 +6,7 @@ import {
   isSuccessfulFinalizedReceipt,
   mergeEnvironment,
   retryDecision,
+  retirementDecision,
   safeReceiptProjection,
   selectNextLifecycleAction,
   valueForCreateAgreement,
@@ -67,6 +68,7 @@ test("deployment identity resumes only the exact active revision", () => {
   assert.equal(deploymentDecision(undefined, current), "DEPLOY");
   assert.equal(deploymentDecision({ ...current, result: "SUCCESS", active: true, contractAddress: "0xcontract" }, current), "RESUME");
   assert.equal(deploymentDecision({ ...current, sourceSha256: "changed", result: "SUCCESS", active: true, contractAddress: "0xcontract" }, current), "REFUSE");
+  assert.equal(deploymentDecision({ ...current, sourceSha256: "old", result: "RETIRED", active: false, remainingAccountingZero: true, contractAddress: "0xcontract" }, current), "REPLACE");
 });
 
 
@@ -102,4 +104,35 @@ test("review retry is allowed only for the current transient source attempt", ()
   assert.equal(retryDecision(agreement, { attemptNumber: 3, sourceStatus: "INVALID" }), "REFUSE_STRUCTURAL");
   assert.equal(retryDecision(agreement, { attemptNumber: 2, sourceStatus: "UNAVAILABLE" }), "REFUSE_MISMATCH");
   assert.equal(retryDecision({ state: "ACTIVE", attemptCount: 0 }, undefined), "REFUSE_STATE");
+});
+
+
+test("superseded revision retires only after expiry and zero accounting", () => {
+  const agreement = {
+    state: "RETRYABLE",
+    reviewDeadline: "2026-09-02T04:43:24Z",
+    sponsorCreditGen: 0,
+    contractorCreditGen: 0,
+  };
+  const accounting = { received_gen: 2, locked_gen: 2, credited_gen: 0, withdrawn_gen: 0 };
+  assert.deepEqual(
+    retirementDecision(agreement, accounting, "2026-09-02T04:43:23Z"),
+    { action: "WAIT", availableAt: "2026-09-02T04:43:24Z" },
+  );
+  assert.deepEqual(
+    retirementDecision(agreement, accounting, "2026-09-02T04:43:24Z"),
+    { action: "RECOVER", availableAt: "2026-09-02T04:43:24Z" },
+  );
+  assert.deepEqual(
+    retirementDecision({ ...agreement, state: "SETTLED", sponsorCreditGen: 2 }, { ...accounting, locked_gen: 0, credited_gen: 2 }),
+    { action: "WITHDRAW_SPONSOR" },
+  );
+  assert.deepEqual(
+    retirementDecision({ ...agreement, state: "CLOSED" }, { received_gen: 2, locked_gen: 0, credited_gen: 0, withdrawn_gen: 2 }),
+    { action: "ARCHIVE" },
+  );
+  assert.deepEqual(
+    retirementDecision({ ...agreement, state: "CLOSED" }, { received_gen: 2, locked_gen: 1, credited_gen: 0, withdrawn_gen: 1 }),
+    { action: "REFUSE_NONZERO" },
+  );
 });

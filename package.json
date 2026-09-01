@@ -14,7 +14,8 @@
     "studionet:deploy": "node scripts/studionet.mjs deploy",
     "studionet:lifecycle": "node scripts/studionet.mjs lifecycle",
     "studionet:retry": "node scripts/studionet.mjs retry",
-    "studionet:recover": "node scripts/studionet.mjs recover"
+    "studionet:recover": "node scripts/studionet.mjs recover",
+    "studionet:retire": "node scripts/studionet.mjs retire"
   },
   "dependencies": {
     "genlayer-js": "1.1.8"
