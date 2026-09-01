@@ -439,8 +439,9 @@ The active contract, frontend, and 2 GEN Studionet lifecycle are verified. The a
 RATIFY, official REVIEW, and contractor WITHDRAW; canonical state is `CLOSED`, verdict `WITHIN_BASELINE`, with received
 2 GEN, withdrawn 2 GEN, locked 0 GEN, and credited 0 GEN. Two earlier failed testnet revisions are excluded as
 `ABANDONED_TESTNET` with their test purses intentionally unrecovered at the user's direction; this is not claimed as
-superseded-accounting compliance. Browser wallet write, public GitHub repository, live frontend, external adoption,
-and Portal acceptance remain pending at this point in the evidence sequence.
+superseded-accounting compliance. Browser wallet write, external adoption, and Portal acceptance remain pending. The
+public repository and live Vercel frontend are available, and the live browser read path has been verified without
+CORS or console errors.
 
 ## Kill criteria
 
