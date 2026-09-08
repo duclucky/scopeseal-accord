@@ -1,0 +1,40 @@
+{
+  "network": "studionet",
+  "attempts": [
+    {
+      "transactionHash": "0x4e15721109809d0310c185ebfed2448369b6a0ecf4cf156c772c547768bedfc8",
+      "network": "studionet",
+      "chainId": 61999,
+      "rpc": "https://studio.genlayer.com/api",
+      "repositoryCommit": "c4c3e8186a2739c52125436f2af9519709b9db9d",
+      "sourceCommit": "c4c3e8186a2739c52125436f2af9519709b9db9d",
+      "sourceSha256": "bc83f0dbd6cb3d5fd5ed88a7876813b9e5ff6e226d1fae6a9e55518167442c8c",
+      "depends": "py-genlayer:1jb45aa8ynh2a9c9xn3b7qqh8sm5q93hwfp7jqmwsfhh8jpz09h6",
+      "contractApi": "ScopeSealAccord/2",
+      "sponsor": "0xC495ef51618D03267A1f227aFe5b27B38c748272",
+      "contractor": "0x45aD397c438397A702B53a7499a78D08961D39Db",
+      "status": "FINALIZED",
+      "submittedAt": "2026-09-08T11:42:56.612Z",
+      "acceptedAt": "2026-09-08T11:43:39.211Z",
+      "acceptedReceipt": {
+        "label": "deploy",
+        "transactionHash": "0x4e15721109809d0310c185ebfed2448369b6a0ecf4cf156c772c547768bedfc8",
+        "status": "FINALIZED",
+        "txExecutionResult": "SUCCESS",
+        "consensusResult": "MAJORITY_AGREE",
+        "contractAddress": "0x9eD134a2D1b39071145A2958b798e1B3c2cf2611"
+      },
+      "result": "SUCCESS",
+      "finalizedAt": "2026-09-08T11:43:39.597Z",
+      "contractAddress": "0x9eD134a2D1b39071145A2958b798e1B3c2cf2611",
+      "receipt": {
+        "label": "deploy",
+        "transactionHash": "0x4e15721109809d0310c185ebfed2448369b6a0ecf4cf156c772c547768bedfc8",
+        "status": "FINALIZED",
+        "txExecutionResult": "SUCCESS",
+        "consensusResult": "MAJORITY_AGREE",
+        "contractAddress": "0x9eD134a2D1b39071145A2958b798e1B3c2cf2611"
+      }
+    }
+  ]
+}

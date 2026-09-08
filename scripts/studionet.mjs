@@ -395,13 +395,32 @@ function normalizedAgreement(value) {
 }
 
 
+function normalizedCloseout(value) {
+  if (!value || typeof value !== "object") return null;
+  return {
+    agreementId: field(value, "agreement_id", "agreementId"), state: field(value, "state"), verdict: field(value, "verdict"),
+    attemptCount: Number(field(value, "attempt_count", "attemptCount") ?? 0),
+    ratifyDeadline: field(value, "ratify_deadline", "ratifyDeadline") ?? "",
+    reviewDeadline: field(value, "review_deadline", "reviewDeadline") ?? "",
+    negotiationDeadline: field(value, "negotiation_deadline", "negotiationDeadline") ?? "",
+    proposalNonce: Number(field(value, "proposal_nonce", "proposalNonce") ?? 0),
+    hasProposal: Boolean(field(value, "has_proposal", "hasProposal")),
+    lockedGen: Number(BigInt(field(value, "locked_amount", "lockedAmount") ?? 0) / GEN),
+    sponsorCreditGen: Number(BigInt(field(value, "sponsor_credit", "sponsorCredit") ?? 0) / GEN),
+    contractorCreditGen: Number(BigInt(field(value, "contractor_credit", "contractorCredit") ?? 0) / GEN),
+  };
+}
+
+
 async function canonicalState(clients, deployment) {
   try {
     const agreement = normalizedAgreement(await readView(clients.readClient, deployment.contractAddress, "get_agreement", [AGREEMENT_ID]));
     const accounting = await readView(clients.readClient, deployment.contractAddress, "get_accounting");
-    return { agreement, accounting };
+    let closeout = null;
+    try { closeout = normalizedCloseout(await readView(clients.readClient, deployment.contractAddress, "get_closeout", [AGREEMENT_ID])); } catch { closeout = null; }
+    return { agreement, closeout, accounting };
   } catch {
-    return { agreement: null, accounting: await readView(clients.readClient, deployment.contractAddress, "get_accounting") };
+    return { agreement: null, closeout: null, accounting: await readView(clients.readClient, deployment.contractAddress, "get_accounting") };
   }
 }
 
@@ -464,6 +483,17 @@ async function inspection(clients) {
     result.contractCodePresent = (await clients.readClient.getContractCode(existing.contractAddress)).length > 2;
     result.contractBalanceGEN = formatGen(await clients.readClient.getBalance({ address: existing.contractAddress }));
     result.canonical = await canonicalState(clients, existing);
+    if (result.canonical.closeout?.attemptCount > 0) {
+      const raw = await readView(clients.readClient, existing.contractAddress, "get_closeout_attempt", [AGREEMENT_ID, result.canonical.closeout.attemptCount]);
+      result.currentCloseoutAttempt = {
+        attemptNumber: Number(field(raw, "attempt_number", "attemptNumber") ?? 0),
+        sourceStatus: field(raw, "source_status", "sourceStatus") ?? "UNKNOWN",
+        sourceCoverage: field(raw, "source_coverage", "sourceCoverage") ?? "UNKNOWN",
+        aggregateVerdict: field(raw, "aggregate_verdict", "aggregateVerdict") ?? "UNKNOWN",
+        consequenceClass: field(raw, "consequence_class", "consequenceClass") ?? "UNKNOWN",
+        rationale: field(raw, "rationale") ?? "",
+      };
+    }
   }
   return { existing, identity, result };
 }
@@ -642,6 +672,82 @@ function createArguments(file) {
 }
 
 
+function milestoneCreateArguments(file) {
+  const now = Date.now();
+  const iso = (offset) => new Date(now + offset).toISOString().replace(/\.\d{3}Z$/u, "Z");
+  return [
+    file.agreementId, file.contractor, "00547772-2025", "58fb29a0-a611-464c-bed0-fe29401479e3", "01",
+    "6912131539", "d9f4bc69-ef7d-42f6-ad8f-802fd332b0a6", "3/PNO/2025",
+    "Complete the awarded single-lot procurement according to the signed public contract.",
+    "Permit only changes that preserve the awarded procurement objective and single-lot identity.",
+    iso(75 * 1000), iso(60 * 60 * 1000), 3600,
+  ];
+}
+
+
+function milestoneCloseoutArguments(file) {
+  const now = Date.now();
+  const iso = (offset) => new Date(now + offset).toISOString().replace(/\.\d{3}Z$/u, "Z");
+  return [
+    file.agreementId, "LOT-0001",
+    "Release retention when the official completion notice confirms final payment and no penalty.",
+    iso(60 * 60 * 1000), iso(2 * 60 * 60 * 1000), 3600,
+  ];
+}
+
+
+async function milestoneLifecycle() {
+  const clients = await roleClients(true);
+  const deployment = readJson(DEPLOYMENT_PATH, undefined);
+  if (!deployment?.active || deployment.result !== "SUCCESS") throw new Error("No active successful milestone deployment exists.");
+  const identity = currentIdentity(clients.sponsorAccount.address, clients.contractorAccount.address);
+  if (deploymentDecision(deployment, identity) !== "RESUME") throw new Error("Milestone deployment identity does not match source and actors.");
+  const file = lifecycleFile(deployment, clients);
+  file.originalPublication = "00547772-2025";
+  file.modificationPublication = null;
+  file.completionPublication = "00734925-2025";
+  let state = await reconcilePending(file, clients, deployment);
+  for (let step = 0; step < 12; step += 1) {
+    if (!state.agreement) {
+      state = await lifecycleWrite({ file, clients, deployment, action: "CREATE_BASE", actor: "sponsor", functionName: "create_agreement", args: milestoneCreateArguments(file), valueGEN: "2" });
+    } else if (state.agreement.state === "DRAFT") {
+      if (new Date().toISOString() < state.agreement.ratifyDeadline) {
+        file.resumeAfter = state.agreement.ratifyDeadline;
+        writeJson(LIFECYCLE_PATH, file);
+        console.log(JSON.stringify({ Result: "WAIT_FOR_CANONICAL_DEADLINE", resumeAfter: file.resumeAfter, nextCommand: "node scripts/studionet.mjs milestone-lifecycle" }, null, 2));
+        return;
+      }
+      state = await lifecycleWrite({ file, clients, deployment, action: "RECOVER_BASE", actor: "sponsor", functionName: "recover_expired", args: [file.agreementId] });
+    } else if (state.agreement.state === "SETTLED" && state.agreement.sponsorCreditGen > 0) {
+      state = await lifecycleWrite({ file, clients, deployment, action: "WITHDRAW_BASE", actor: "sponsor", functionName: "withdraw_credit", args: [file.agreementId] });
+    } else if (state.agreement.state !== "CLOSED") {
+      throw new Error(`Milestone base agreement is inconsistent (${state.agreement.state}).`);
+    } else if (!state.closeout) {
+      state = await lifecycleWrite({ file, clients, deployment, action: "OPEN_CLOSEOUT", actor: "sponsor", functionName: "open_closeout", args: milestoneCloseoutArguments(file), valueGEN: "1" });
+    } else if (state.closeout.state === "OFFERED") {
+      state = await lifecycleWrite({ file, clients, deployment, action: "RATIFY_CLOSEOUT", actor: "contractor", functionName: "ratify_closeout", args: [file.agreementId] });
+    } else if (["ACTIVE", "RETRYABLE"].includes(state.closeout.state)) {
+      state = await lifecycleWrite({ file, clients, deployment, action: "REVIEW_CLOSEOUT", actor: "sponsor", functionName: "request_closeout_review", args: [file.agreementId, file.completionPublication] });
+      if (state.closeout?.state === "RETRYABLE") {
+        file.finalCanonical = state; writeJson(LIFECYCLE_PATH, file);
+        console.log(JSON.stringify({ Result: "RETRYABLE", closeoutAttempt: state.closeout.attemptCount }, null, 2)); return;
+      }
+    } else if (state.closeout.state === "NEGOTIATION" && !state.closeout.hasProposal) {
+      state = await lifecycleWrite({ file, clients, deployment, action: "PROPOSE_CLOSEOUT", actor: "sponsor", functionName: "propose_closeout_split", args: [file.agreementId, 1] });
+    } else if (state.closeout.state === "NEGOTIATION") {
+      state = await lifecycleWrite({ file, clients, deployment, action: "ACCEPT_CLOSEOUT", actor: "contractor", functionName: "accept_closeout_split", args: [file.agreementId, state.closeout.proposalNonce] });
+    } else if (state.closeout.state === "SETTLED") {
+      const actor = state.closeout.contractorCreditGen > 0 ? "contractor" : "sponsor";
+      state = await lifecycleWrite({ file, clients, deployment, action: "WITHDRAW_CLOSEOUT", actor, functionName: "withdraw_closeout_credit", args: [file.agreementId] });
+    } else if (state.closeout.state === "CLOSED") {
+      file.completedAt = new Date().toISOString(); file.finalCanonical = state; writeJson(LIFECYCLE_PATH, file);
+      console.log(JSON.stringify({ Result: "SUCCESS", agreementId: file.agreementId, closeoutState: "CLOSED", transactionCount: file.transactions.length }, null, 2)); return;
+    } else throw new Error(`Milestone closeout is inconsistent (${state.closeout.state}).`);
+  }
+  throw new Error("Milestone lifecycle exceeded the bounded step limit.");
+}
+
+
 async function lifecycle(allowTransientRetry = false) {
   const clients = await roleClients(true);
   const deployment = readJson(DEPLOYMENT_PATH, undefined);
@@ -808,6 +914,30 @@ async function quarantine() {
     accounting: state.accounting,
     archive: paths.relative,
   }, null, 2));
+}
+
+
+async function abandonBrokenMilestone() {
+  const clients = await roleClients(true);
+  const deployment = readJson(DEPLOYMENT_PATH, undefined);
+  if (!deployment?.active || deployment.result !== "SUCCESS" || !deployment.contractAddress) {
+    throw new Error("No active milestone deployment is available to abandon.");
+  }
+  const file = lifecycleFile(deployment, clients);
+  const canonical = await canonicalState(clients, deployment);
+  const paths = archivePaths(deployment.contractAddress);
+  const abandonedAt = new Date().toISOString();
+  const reason = "E5 source completed but semantic output failed strict settlement invariants; no consequence occurred.";
+  const archivedDeployment = {
+    ...deployment, active: false, result: "ABANDONED_TESTNET", recoveryPending: false,
+    abandonedAt, reason, remainingAccounting: canonical.accounting,
+  };
+  const archivedLifecycle = { ...file, archived: true, abandonedAt, reason, finalCanonical: canonical };
+  writeJson(paths.deployment, archivedDeployment);
+  writeJson(paths.lifecycle, archivedLifecycle);
+  writeJson(DEPLOYMENT_PATH, archivedDeployment);
+  writeJson(LIFECYCLE_PATH, archivedLifecycle);
+  console.log(JSON.stringify({ Result: "ABANDONED_TESTNET", contractAddress: deployment.contractAddress, reason, remainingAccounting: canonical.accounting, archive: paths.relative }, null, 2));
 }
 
 
@@ -994,12 +1124,14 @@ async function main() {
   if (command === "inspect") await inspect();
   else if (command === "deploy") await deploy();
   else if (command === "lifecycle") await lifecycle();
+  else if (command === "milestone-lifecycle") await milestoneLifecycle();
   else if (command === "retry") await retryLifecycle();
   else if (command === "recover") await recover();
   else if (command === "retire") await retire();
   else if (command === "quarantine") await quarantine();
+  else if (command === "abandon-broken") await abandonBrokenMilestone();
   else if (command === "recover-superseded") await recoverSuperseded();
-  else throw new Error("Usage: node scripts/studionet.mjs <inspect|deploy|lifecycle|retry|recover|retire|quarantine|recover-superseded>");
+  else throw new Error("Usage: node scripts/studionet.mjs <inspect|deploy|lifecycle|milestone-lifecycle|retry|recover|retire|quarantine|abandon-broken|recover-superseded>");
 }
 
 

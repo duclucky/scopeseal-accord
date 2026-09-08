@@ -1,0 +1,361 @@
+{
+  "network": "studionet",
+  "chainId": 61999,
+  "agreementId": "scopeseal-closeout-001",
+  "contractAddress": "0x9eD134a2D1b39071145A2958b798e1B3c2cf2611",
+  "sponsor": "0xC495ef51618D03267A1f227aFe5b27B38c748272",
+  "contractor": "0x45aD397c438397A702B53a7499a78D08961D39Db",
+  "originalPublication": "00547772-2025",
+  "modificationPublication": null,
+  "valueGEN": "2",
+  "pendingTransaction": null,
+  "transactions": [
+    {
+      "action": "CREATE_BASE",
+      "actor": "sponsor",
+      "transactionHash": "0xf259c2991ea004773f77d169e19eb89f6829f63e60010b71584edab66f653e56",
+      "submittedAt": "2026-09-08T11:45:59.210Z",
+      "valueGEN": "2",
+      "status": "FINALIZED",
+      "finalizedAt": "2026-09-08T11:46:37.531Z",
+      "receipt": {
+        "label": "CREATE_BASE",
+        "transactionHash": "0xf259c2991ea004773f77d169e19eb89f6829f63e60010b71584edab66f653e56",
+        "status": "FINALIZED",
+        "txExecutionResult": "SUCCESS",
+        "consensusResult": "MAJORITY_AGREE",
+        "contractAddress": null
+      },
+      "explorer": "https://explorer-studio.genlayer.com/tx/0xf259c2991ea004773f77d169e19eb89f6829f63e60010b71584edab66f653e56",
+      "canonicalAfter": {
+        "agreement": {
+          "agreementId": "scopeseal-closeout-001",
+          "sponsor": "0xc495ef51618d03267a1f227afe5b27b38c748272",
+          "contractor": "0x45ad397c438397a702b53a7499a78d08961d39db",
+          "state": "DRAFT",
+          "verdict": "",
+          "attemptCount": 0,
+          "modificationPublication": "",
+          "ratifyDeadline": "2026-09-08T11:47:12Z",
+          "reviewDeadline": "2026-09-08T12:45:57Z",
+          "negotiationDeadline": "",
+          "proposalNonce": 0,
+          "hasProposal": false,
+          "lockedGen": 2,
+          "sponsorCreditGen": 0,
+          "contractorCreditGen": 0
+        },
+        "closeout": null,
+        "accounting": {
+          "credited_gen": 0,
+          "locked_gen": 2,
+          "received_gen": 2,
+          "withdrawn_gen": 0
+        }
+      }
+    },
+    {
+      "action": "RECOVER_BASE",
+      "actor": "sponsor",
+      "transactionHash": "0x5b0a75ee4bd01fd948b3e7d109dd4b95371677d08faf0e7c8e2b26b654c11f01",
+      "submittedAt": "2026-09-08T11:47:32.409Z",
+      "valueGEN": "0",
+      "status": "FINALIZED",
+      "finalizedAt": "2026-09-08T11:48:14.815Z",
+      "receipt": {
+        "label": "RECOVER_BASE",
+        "transactionHash": "0x5b0a75ee4bd01fd948b3e7d109dd4b95371677d08faf0e7c8e2b26b654c11f01",
+        "status": "FINALIZED",
+        "txExecutionResult": "SUCCESS",
+        "consensusResult": "MAJORITY_AGREE",
+        "contractAddress": null
+      },
+      "explorer": "https://explorer-studio.genlayer.com/tx/0x5b0a75ee4bd01fd948b3e7d109dd4b95371677d08faf0e7c8e2b26b654c11f01",
+      "canonicalAfter": {
+        "agreement": {
+          "agreementId": "scopeseal-closeout-001",
+          "sponsor": "0xc495ef51618d03267a1f227afe5b27b38c748272",
+          "contractor": "0x45ad397c438397a702b53a7499a78d08961d39db",
+          "state": "SETTLED",
+          "verdict": "EXPIRED_RECOVERY",
+          "attemptCount": 0,
+          "modificationPublication": "",
+          "ratifyDeadline": "2026-09-08T11:47:12Z",
+          "reviewDeadline": "2026-09-08T12:45:57Z",
+          "negotiationDeadline": "",
+          "proposalNonce": 0,
+          "hasProposal": false,
+          "lockedGen": 0,
+          "sponsorCreditGen": 2,
+          "contractorCreditGen": 0
+        },
+        "closeout": null,
+        "accounting": {
+          "credited_gen": 2,
+          "locked_gen": 0,
+          "received_gen": 2,
+          "withdrawn_gen": 0
+        }
+      }
+    },
+    {
+      "action": "WITHDRAW_BASE",
+      "actor": "sponsor",
+      "transactionHash": "0xfcc6605588acdc87508d875add6ec2f438cee0a2935917a40b58cd433a9fc44a",
+      "submittedAt": "2026-09-08T11:48:16.457Z",
+      "valueGEN": "0",
+      "status": "FINALIZED",
+      "finalizedAt": "2026-09-08T11:48:57.426Z",
+      "receipt": {
+        "label": "WITHDRAW_BASE",
+        "transactionHash": "0xfcc6605588acdc87508d875add6ec2f438cee0a2935917a40b58cd433a9fc44a",
+        "status": "FINALIZED",
+        "txExecutionResult": "SUCCESS",
+        "consensusResult": "MAJORITY_AGREE",
+        "contractAddress": null
+      },
+      "explorer": "https://explorer-studio.genlayer.com/tx/0xfcc6605588acdc87508d875add6ec2f438cee0a2935917a40b58cd433a9fc44a",
+      "canonicalAfter": {
+        "agreement": {
+          "agreementId": "scopeseal-closeout-001",
+          "sponsor": "0xc495ef51618d03267a1f227afe5b27b38c748272",
+          "contractor": "0x45ad397c438397a702b53a7499a78d08961d39db",
+          "state": "CLOSED",
+          "verdict": "EXPIRED_RECOVERY",
+          "attemptCount": 0,
+          "modificationPublication": "",
+          "ratifyDeadline": "2026-09-08T11:47:12Z",
+          "reviewDeadline": "2026-09-08T12:45:57Z",
+          "negotiationDeadline": "",
+          "proposalNonce": 0,
+          "hasProposal": false,
+          "lockedGen": 0,
+          "sponsorCreditGen": 0,
+          "contractorCreditGen": 0
+        },
+        "closeout": null,
+        "accounting": {
+          "credited_gen": 0,
+          "locked_gen": 0,
+          "received_gen": 2,
+          "withdrawn_gen": 2
+        }
+      }
+    },
+    {
+      "action": "OPEN_CLOSEOUT",
+      "actor": "sponsor",
+      "transactionHash": "0x5b7a32b12a519687f276dd3dc3b823154e9cc5cc164ce8e004a1b91a46b3bc11",
+      "submittedAt": "2026-09-08T11:48:59.281Z",
+      "valueGEN": "1",
+      "status": "FINALIZED",
+      "finalizedAt": "2026-09-08T11:49:45.271Z",
+      "receipt": {
+        "label": "OPEN_CLOSEOUT",
+        "transactionHash": "0x5b7a32b12a519687f276dd3dc3b823154e9cc5cc164ce8e004a1b91a46b3bc11",
+        "status": "FINALIZED",
+        "txExecutionResult": "SUCCESS",
+        "consensusResult": "MAJORITY_AGREE",
+        "contractAddress": null
+      },
+      "explorer": "https://explorer-studio.genlayer.com/tx/0x5b7a32b12a519687f276dd3dc3b823154e9cc5cc164ce8e004a1b91a46b3bc11",
+      "canonicalAfter": {
+        "agreement": {
+          "agreementId": "scopeseal-closeout-001",
+          "sponsor": "0xc495ef51618d03267a1f227afe5b27b38c748272",
+          "contractor": "0x45ad397c438397a702b53a7499a78d08961d39db",
+          "state": "CLOSED",
+          "verdict": "EXPIRED_RECOVERY",
+          "attemptCount": 0,
+          "modificationPublication": "",
+          "ratifyDeadline": "2026-09-08T11:47:12Z",
+          "reviewDeadline": "2026-09-08T12:45:57Z",
+          "negotiationDeadline": "",
+          "proposalNonce": 0,
+          "hasProposal": false,
+          "lockedGen": 0,
+          "sponsorCreditGen": 0,
+          "contractorCreditGen": 0
+        },
+        "closeout": {
+          "agreementId": "scopeseal-closeout-001",
+          "state": "OFFERED",
+          "verdict": "",
+          "attemptCount": 0,
+          "ratifyDeadline": "2026-09-08T12:48:57Z",
+          "reviewDeadline": "2026-09-08T13:48:57Z",
+          "negotiationDeadline": "",
+          "proposalNonce": 0,
+          "hasProposal": false,
+          "lockedGen": 1,
+          "sponsorCreditGen": 0,
+          "contractorCreditGen": 0
+        },
+        "accounting": {
+          "credited_gen": 0,
+          "locked_gen": 1,
+          "received_gen": 3,
+          "withdrawn_gen": 2
+        }
+      }
+    },
+    {
+      "action": "RATIFY_CLOSEOUT",
+      "actor": "contractor",
+      "transactionHash": "0x6156525d0fcef12d354f010ac70a9b7d7cb73179607dc352a745e03ff460aec0",
+      "submittedAt": "2026-09-08T11:49:46.938Z",
+      "valueGEN": "0",
+      "status": "FINALIZED",
+      "finalizedAt": "2026-09-08T11:50:29.612Z",
+      "receipt": {
+        "label": "RATIFY_CLOSEOUT",
+        "transactionHash": "0x6156525d0fcef12d354f010ac70a9b7d7cb73179607dc352a745e03ff460aec0",
+        "status": "FINALIZED",
+        "txExecutionResult": "SUCCESS",
+        "consensusResult": "MAJORITY_AGREE",
+        "contractAddress": null
+      },
+      "explorer": "https://explorer-studio.genlayer.com/tx/0x6156525d0fcef12d354f010ac70a9b7d7cb73179607dc352a745e03ff460aec0",
+      "canonicalAfter": {
+        "agreement": {
+          "agreementId": "scopeseal-closeout-001",
+          "sponsor": "0xc495ef51618d03267a1f227afe5b27b38c748272",
+          "contractor": "0x45ad397c438397a702b53a7499a78d08961d39db",
+          "state": "CLOSED",
+          "verdict": "EXPIRED_RECOVERY",
+          "attemptCount": 0,
+          "modificationPublication": "",
+          "ratifyDeadline": "2026-09-08T11:47:12Z",
+          "reviewDeadline": "2026-09-08T12:45:57Z",
+          "negotiationDeadline": "",
+          "proposalNonce": 0,
+          "hasProposal": false,
+          "lockedGen": 0,
+          "sponsorCreditGen": 0,
+          "contractorCreditGen": 0
+        },
+        "closeout": {
+          "agreementId": "scopeseal-closeout-001",
+          "state": "ACTIVE",
+          "verdict": "",
+          "attemptCount": 0,
+          "ratifyDeadline": "2026-09-08T12:48:57Z",
+          "reviewDeadline": "2026-09-08T13:48:57Z",
+          "negotiationDeadline": "",
+          "proposalNonce": 0,
+          "hasProposal": false,
+          "lockedGen": 1,
+          "sponsorCreditGen": 0,
+          "contractorCreditGen": 0
+        },
+        "accounting": {
+          "credited_gen": 0,
+          "locked_gen": 1,
+          "received_gen": 3,
+          "withdrawn_gen": 2
+        }
+      }
+    },
+    {
+      "action": "REVIEW_CLOSEOUT",
+      "actor": "sponsor",
+      "transactionHash": "0xe3893762991cef2d88294aaa17f4c517ef5c428576c565bf7b11f364a4ffdea9",
+      "submittedAt": "2026-09-08T11:50:31.244Z",
+      "valueGEN": "0",
+      "status": "FINALIZED",
+      "finalizedAt": "2026-09-08T11:51:35.767Z",
+      "receipt": {
+        "label": "REVIEW_CLOSEOUT",
+        "transactionHash": "0xe3893762991cef2d88294aaa17f4c517ef5c428576c565bf7b11f364a4ffdea9",
+        "status": "FINALIZED",
+        "txExecutionResult": "SUCCESS",
+        "consensusResult": "MAJORITY_AGREE",
+        "contractAddress": null
+      },
+      "explorer": "https://explorer-studio.genlayer.com/tx/0xe3893762991cef2d88294aaa17f4c517ef5c428576c565bf7b11f364a4ffdea9",
+      "canonicalAfter": {
+        "agreement": {
+          "agreementId": "scopeseal-closeout-001",
+          "sponsor": "0xc495ef51618d03267a1f227afe5b27b38c748272",
+          "contractor": "0x45ad397c438397a702b53a7499a78d08961d39db",
+          "state": "CLOSED",
+          "verdict": "EXPIRED_RECOVERY",
+          "attemptCount": 0,
+          "modificationPublication": "",
+          "ratifyDeadline": "2026-09-08T11:47:12Z",
+          "reviewDeadline": "2026-09-08T12:45:57Z",
+          "negotiationDeadline": "",
+          "proposalNonce": 0,
+          "hasProposal": false,
+          "lockedGen": 0,
+          "sponsorCreditGen": 0,
+          "contractorCreditGen": 0
+        },
+        "closeout": {
+          "agreementId": "scopeseal-closeout-001",
+          "state": "RETRYABLE",
+          "verdict": "UNVERIFIABLE",
+          "attemptCount": 1,
+          "ratifyDeadline": "2026-09-08T12:48:57Z",
+          "reviewDeadline": "2026-09-08T13:48:57Z",
+          "negotiationDeadline": "",
+          "proposalNonce": 0,
+          "hasProposal": false,
+          "lockedGen": 1,
+          "sponsorCreditGen": 0,
+          "contractorCreditGen": 0
+        },
+        "accounting": {
+          "credited_gen": 0,
+          "locked_gen": 1,
+          "received_gen": 3,
+          "withdrawn_gen": 2
+        }
+      }
+    }
+  ],
+  "completionPublication": "00734925-2025",
+  "resumeAfter": "2026-09-08T11:47:12Z",
+  "finalCanonical": {
+    "agreement": {
+      "agreementId": "scopeseal-closeout-001",
+      "sponsor": "0xc495ef51618d03267a1f227afe5b27b38c748272",
+      "contractor": "0x45ad397c438397a702b53a7499a78d08961d39db",
+      "state": "CLOSED",
+      "verdict": "EXPIRED_RECOVERY",
+      "attemptCount": 0,
+      "modificationPublication": "",
+      "ratifyDeadline": "2026-09-08T11:47:12Z",
+      "reviewDeadline": "2026-09-08T12:45:57Z",
+      "negotiationDeadline": "",
+      "proposalNonce": 0,
+      "hasProposal": false,
+      "lockedGen": 0,
+      "sponsorCreditGen": 0,
+      "contractorCreditGen": 0
+    },
+    "closeout": {
+      "agreementId": "scopeseal-closeout-001",
+      "state": "RETRYABLE",
+      "verdict": "UNVERIFIABLE",
+      "attemptCount": 1,
+      "ratifyDeadline": "2026-09-08T12:48:57Z",
+      "reviewDeadline": "2026-09-08T13:48:57Z",
+      "negotiationDeadline": "",
+      "proposalNonce": 0,
+      "hasProposal": false,
+      "lockedGen": 1,
+      "sponsorCreditGen": 0,
+      "contractorCreditGen": 0
+    },
+    "accounting": {
+      "credited_gen": 0,
+      "locked_gen": 1,
+      "received_gen": 3,
+      "withdrawn_gen": 2
+    }
+  },
+  "archived": true,
+  "abandonedAt": "2026-09-08T11:53:54.040Z",
+  "reason": "E5 source completed but semantic output failed strict settlement invariants; no consequence occurred."
+}
