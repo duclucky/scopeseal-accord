@@ -1,7 +1,7 @@
 import { createClient as createSdkClient } from "genlayer-js";
 import { studionet } from "genlayer-js/chains";
 import { ExecutionResult, TransactionStatus } from "genlayer-js/types";
-import type { Agreement } from "../domain/types";
+import type { Agreement, Closeout } from "../domain/types";
 import { ensureWalletChain } from "../wallet/network";
 import type { Eip1193Provider } from "../wallet/types";
 import type { ContractAdapter, TransactionReference } from "./contract";
@@ -130,6 +130,23 @@ function mapAgreement(raw: RawAgreement): Agreement {
   };
 }
 
+function mapCloseout(raw: RawAgreement): Closeout {
+  const state = asText(raw.state);
+  if (!["OFFERED", "ACTIVE", "NEGOTIATION", "RETRYABLE", "SETTLED", "CLOSED"].includes(state)) {
+    throw new Error("Canonical closeout state is unsupported.");
+  }
+  const allocation = asNumber(raw.proposal_contractor_gen);
+  return {
+    agreementId: asText(raw.agreement_id), sponsor: asText(raw.sponsor), contractor: asText(raw.contractor),
+    state: state as Closeout["state"], verdict: (asText(raw.verdict) || undefined) as Closeout["verdict"],
+    lotId: asText(raw.lot_id), completionStandard: asText(raw.completion_standard),
+    ratificationDeadline: asText(raw.ratify_deadline), reviewDeadline: asText(raw.review_deadline),
+    negotiationDeadline: asText(raw.negotiation_deadline), completionPublication: asText(raw.completion_publication) || undefined,
+    lockedGen: asGen(raw.locked_amount), sponsorCreditGen: asGen(raw.sponsor_credit), contractorCreditGen: asGen(raw.contractor_credit),
+    proposalNonce: asNumber(raw.proposal_nonce), contractorAllocationGen: allocation === 1 ? 1 : 0,
+  };
+}
+
 
 export function createGenLayerContractAdapter(options: AdapterOptions): ContractAdapter {
   if (!isAddress(options.contractAddress)) throw new Error("A valid deployed contract address is required.");
@@ -206,5 +223,23 @@ export function createGenLayerContractAdapter(options: AdapterOptions): Contract
     acceptAllocation: (id, nonce) => write("accept_split", [id, nonce]),
     recoverExpired: (id) => write("recover_expired", [id]),
     withdrawCredit: (id) => write("withdraw_credit", [id]),
+    getCloseout: async (id) => {
+      try { return mapCloseout(parseObject(await read("get_closeout", [id]))); }
+      catch (cause) {
+        if (cause instanceof Error && /not found|missing key|KeyError/iu.test(cause.message)) return null;
+        throw cause;
+      }
+    },
+    getCloseoutCredit: async (id, requestedAccount) => {
+      if (!isAddress(requestedAccount)) throw new Error("A valid account is required.");
+      return asNumber(await read("get_closeout_credit_gen", [id, requestedAccount]));
+    },
+    openCloseout: (input) => write("open_closeout", [input.agreementId, input.lotId, input.completionStandard, input.ratificationDeadline, input.reviewDeadline, input.negotiationWindowSeconds], GEN),
+    ratifyCloseout: (id) => write("ratify_closeout", [id]),
+    reviewCloseout: (id, publication) => write("request_closeout_review", [id, publication]),
+    proposeCloseoutAllocation: (id, contractorGen) => write("propose_closeout_split", [id, contractorGen]),
+    acceptCloseoutAllocation: (id, nonce) => write("accept_closeout_split", [id, nonce]),
+    recoverCloseout: (id) => write("recover_closeout", [id]),
+    withdrawCloseoutCredit: (id) => write("withdraw_closeout_credit", [id]),
   };
 }

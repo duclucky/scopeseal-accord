@@ -11,6 +11,7 @@ import { HelpPage } from "./pages/HelpPage";
 import { HomePage } from "./pages/HomePage";
 import { NegotiationPage } from "./pages/NegotiationPage";
 import { NewAgreementPage } from "./pages/NewAgreementPage";
+import { CloseoutPage } from "./pages/CloseoutPage";
 import { TransactionProvider } from "./transactions/TransactionProvider";
 import { WalletProvider } from "./wallet/WalletProvider";
 import { useWallet } from "./wallet/WalletProvider";
@@ -55,6 +56,7 @@ export function App({ adapter, discoverWallets }: { adapter?: ContractAdapter; d
               <Route path="agreements/new" element={<NewAgreementPage />} />
               <Route path="agreements/:agreementId" element={<AgreementDetailPage />} />
               <Route path="agreements/:agreementId/negotiate" element={<NegotiationPage />} />
+              <Route path="agreements/:agreementId/closeout" element={<CloseoutPage />} />
               <Route path="activity" element={<ActivityPage />} />
               <Route path="account" element={<AccountPage />} />
               <Route path="help" element={<HelpPage />} />

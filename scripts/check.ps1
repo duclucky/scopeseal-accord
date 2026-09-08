@@ -1,5 +1,6 @@
 $ErrorActionPreference = "Stop"
 $env:PYTHONUTF8 = "1"
+$env:GENVM_VERSION = "v0.2.16"
 
 Write-Output "[1/5] GenVM lint"
 & ".venv\Scripts\genvm-lint.exe" check "contracts\scopeseal_accord.py"

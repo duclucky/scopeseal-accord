@@ -14,6 +14,13 @@ WRITE_METHODS = {
     "accept_split",
     "recover_expired",
     "withdraw_credit",
+    "open_closeout",
+    "ratify_closeout",
+    "request_closeout_review",
+    "propose_closeout_split",
+    "accept_closeout_split",
+    "recover_closeout",
+    "withdraw_closeout_credit",
 }
 VIEW_METHODS = {
     "get_agreement",
@@ -21,6 +28,9 @@ VIEW_METHODS = {
     "get_account_agreement_ids",
     "get_credit_gen",
     "get_accounting",
+    "get_closeout",
+    "get_closeout_attempt",
+    "get_closeout_credit_gen",
 }
 
 
@@ -85,9 +95,10 @@ def test_public_api_matches_locked_specification(module: ast.Module) -> None:
     assert writes == WRITE_METHODS
     assert views == VIEW_METHODS
     assert "gl.public.write.payable" in decorators["create_agreement"]
+    assert "gl.public.write.payable" in decorators["open_closeout"]
     assert all(
         "gl.public.write.payable" not in decorators[name]
-        for name in WRITE_METHODS - {"create_agreement"}
+        for name in WRITE_METHODS - {"create_agreement", "open_closeout"}
     )
 
 
@@ -125,7 +136,7 @@ def test_consensus_and_value_primitives_are_present(source: str) -> None:
 
 def test_official_queries_are_bounded_to_the_publication_graph(source: str) -> None:
     assert "def _publication_graph(publication: str) -> str:" in source
-    assert source.count('"GRAPH <" + _publication_graph(publication) + "> {') == 2
+    assert source.count('"GRAPH <" + _publication_graph(publication) + "> {') == 3
     assert "GRAPH ?g" not in source
     assert "?contract a epo:Contract" in source
     assert "epo:SettledContract" not in source
@@ -139,3 +150,4 @@ def test_semantic_prompt_states_the_exact_settlement_row_schema(module: ast.Modu
     )
     assert 'ENTITY_RESULTS_SCHEMA=[{"entity_id":"AMENDMENT_SCOPE","verdict":"WITHIN_BASELINE|MATERIAL_AMENDMENT"}]' in string_literals
     assert "AGGREGATE_VERDICT must exactly equal the single entity verdict." in string_literals
+    assert 'ENTITY_RESULTS_SCHEMA=[{"entity_id":"COMPLETION","verdict":"RELEASE_RETENTION|NEGOTIATE_RETENTION"}]' in string_literals

@@ -33,6 +33,10 @@ function adapter(value: Agreement): ContractAdapter {
     waitForAccepted: vi.fn(async () => undefined), waitForFinality: vi.fn(async () => undefined),
     createAgreement: vi.fn(transaction), ratifyAgreement: vi.fn(transaction), reviewModification: vi.fn(transaction),
     proposeAllocation: vi.fn(transaction), acceptAllocation: vi.fn(transaction), recoverExpired: vi.fn(transaction), withdrawCredit: vi.fn(transaction),
+    getCloseout: vi.fn(async () => null), getCloseoutCredit: vi.fn(async () => 0),
+    openCloseout: vi.fn(transaction), ratifyCloseout: vi.fn(transaction), reviewCloseout: vi.fn(transaction),
+    proposeCloseoutAllocation: vi.fn(transaction), acceptCloseoutAllocation: vi.fn(transaction),
+    recoverCloseout: vi.fn(transaction), withdrawCloseoutCredit: vi.fn(transaction),
   };
 }
 

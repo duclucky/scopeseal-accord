@@ -31,4 +31,13 @@ export const unconfiguredContract: ContractAdapter = {
   async acceptAllocation() { return unavailable(); },
   async recoverExpired() { return unavailable(); },
   async withdrawCredit() { return unavailable(); },
+  async getCloseout() { return unavailable(); },
+  async getCloseoutCredit() { return unavailable(); },
+  async openCloseout() { return unavailable(); },
+  async ratifyCloseout() { return unavailable(); },
+  async reviewCloseout() { return unavailable(); },
+  async proposeCloseoutAllocation() { return unavailable(); },
+  async acceptCloseoutAllocation() { return unavailable(); },
+  async recoverCloseout() { return unavailable(); },
+  async withdrawCloseoutCredit() { return unavailable(); },
 };

@@ -8,6 +8,7 @@ const routes = [
   ["/agreements/new", "Create an amendment agreement"],
   ["/agreements/AGR-001", "Agreement AGR-001"],
   ["/agreements/AGR-001/negotiate", "Resolve a material amendment"],
+  ["/agreements/AGR-001/closeout", "Completion retention closeout"],
   ["/activity", "Your agreement activity"],
   ["/account", "Wallet and credits"],
   ["/help", "How ScopeSeal works"],

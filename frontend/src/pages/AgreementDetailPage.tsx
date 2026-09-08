@@ -62,6 +62,7 @@ export function AgreementDetailPage() {
         </dl>
         <h2>Locked allowance</h2><p>{agreement.allowance}</p>
       </section>
+      {agreement.state === "CLOSED" ? <section className="action-panel" aria-labelledby="closeout-title"><p className="eyebrow">Completion retention</p><h2 id="closeout-title">Close out the completed contract</h2><p>Fund, ratify, review and resolve a separate 1 GEN retention against an official TED completion notice.</p><Link className="button button-secondary" to={`/agreements/${agreement.id}/closeout`}>Open completion closeout</Link></section> : null}
       <section className="action-panel" aria-labelledby="available-action-title">
         <p className="eyebrow">Role and state gated</p><h2 id="available-action-title">Available action</h2>
         {!canWrite ? <p>Connect the eligible wallet to enable a write.</p> : null}

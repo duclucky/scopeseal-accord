@@ -46,3 +46,33 @@ export type CreateAgreementInput = {
   reviewDeadline: string;
   negotiationWindowSeconds: number;
 };
+
+export type CloseoutState = "OFFERED" | "ACTIVE" | "NEGOTIATION" | "RETRYABLE" | "SETTLED" | "CLOSED";
+
+export type Closeout = {
+  agreementId: string;
+  sponsor: string;
+  contractor: string;
+  state: CloseoutState;
+  verdict?: "RELEASE_RETENTION" | "NEGOTIATE_RETENTION" | "UNVERIFIABLE" | "NEGOTIATED" | "EXPIRED_RECOVERY";
+  lotId: string;
+  completionStandard: string;
+  ratificationDeadline: string;
+  reviewDeadline: string;
+  negotiationDeadline: string;
+  completionPublication?: string;
+  lockedGen: number;
+  sponsorCreditGen: number;
+  contractorCreditGen: number;
+  proposalNonce: number;
+  contractorAllocationGen: 0 | 1;
+};
+
+export type OpenCloseoutInput = {
+  agreementId: string;
+  lotId: string;
+  completionStandard: string;
+  ratificationDeadline: string;
+  reviewDeadline: string;
+  negotiationWindowSeconds: number;
+};

@@ -980,6 +980,39 @@ textarea::placeholder {
   }
 }
 
+.stage-list {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: var(--space-2);
+  padding: 0;
+  list-style: none;
+}
+
+.stage-list li {
+  min-height: 44px;
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-muted-foreground);
+  text-align: center;
+}
+
+.stage-list .stage-active {
+  border-color: var(--color-accent);
+  color: var(--color-foreground);
+  font-weight: 700;
+}
+
+.stage-list [aria-current="step"] {
+  background: var(--color-muted);
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+@media (max-width: 640px) {
+  .stage-list { grid-template-columns: 1fr; }
+}
+
 @media (prefers-color-scheme: dark) {
   :root {
     --color-primary: #93c5fd;

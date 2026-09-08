@@ -9,7 +9,7 @@ const PROJECT_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const CONTRACT_PATH = join(PROJECT_ROOT, "contracts", "scopeseal_accord.py");
 const PROJECT_ENV_PATH = join(PROJECT_ROOT, ".env");
 const PARENT_ENV_PATH = join(PROJECT_ROOT, "..", ".env");
-const EVIDENCE_DIR = join(PROJECT_ROOT, "docs", "evidence", "studionet");
+const EVIDENCE_DIR = join(PROJECT_ROOT, "docs", "evidence", "studionet", "milestones", "MS-001");
 const DEPLOYMENT_PATH = join(EVIDENCE_DIR, "deployment.json");
 const DEPLOYMENT_ATTEMPTS_PATH = join(EVIDENCE_DIR, "deployment-attempts.json");
 const LIFECYCLE_PATH = join(EVIDENCE_DIR, "lifecycle.json");
@@ -21,7 +21,7 @@ const GEN = 10n ** 18n;
 const IDENTITY_KEYS = [
   "network", "chainId", "sourceCommit", "sourceSha256", "depends", "contractApi", "sponsor", "contractor",
 ];
-const AGREEMENT_ID = "scopeseal-official-001";
+const AGREEMENT_ID = "scopeseal-closeout-001";
 
 
 function readJson(path, fallback) {
@@ -357,7 +357,7 @@ function currentIdentity(sponsor, contractor) {
     sourceCommit: execFileSync("git", ["log", "-1", "--format=%H", "--", "contracts/scopeseal_accord.py"], { cwd: PROJECT_ROOT, encoding: "utf8" }).trim(),
     sourceSha256: createHash("sha256").update(source).digest("hex"),
     depends,
-    contractApi: "ScopeSealAccord/1",
+    contractApi: "ScopeSealAccord/2",
     sponsor,
     contractor,
   };
@@ -606,7 +606,7 @@ async function lifecycleWrite({
     address: deployment.contractAddress,
     functionName,
     args,
-    value: valueGEN === "2" ? valueForCreateAgreement() : 0n,
+    value: valueGEN === "2" ? valueForCreateAgreement() : valueGEN === "1" ? GEN : 0n,
   });
   file.pendingTransaction = {
     action,

@@ -1,4 +1,4 @@
-import type { Agreement, CreateAgreementInput } from "../domain/types";
+import type { Agreement, Closeout, CreateAgreementInput, OpenCloseoutInput } from "../domain/types";
 
 export type TransactionReference = { hash: string };
 
@@ -25,4 +25,13 @@ export interface ContractAdapter {
   acceptAllocation(id: string, proposalNonce: number): Promise<TransactionReference>;
   recoverExpired(id: string): Promise<TransactionReference>;
   withdrawCredit(id: string): Promise<TransactionReference>;
+  getCloseout(id: string): Promise<Closeout | null>;
+  getCloseoutCredit(id: string, account: string): Promise<number>;
+  openCloseout(input: OpenCloseoutInput): Promise<TransactionReference>;
+  ratifyCloseout(id: string): Promise<TransactionReference>;
+  reviewCloseout(id: string, completionPublication: string): Promise<TransactionReference>;
+  proposeCloseoutAllocation(id: string, contractorGen: 0 | 1): Promise<TransactionReference>;
+  acceptCloseoutAllocation(id: string, proposalNonce: number): Promise<TransactionReference>;
+  recoverCloseout(id: string): Promise<TransactionReference>;
+  withdrawCloseoutCredit(id: string): Promise<TransactionReference>;
 }

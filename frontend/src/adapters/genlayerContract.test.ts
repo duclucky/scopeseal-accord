@@ -36,6 +36,13 @@ const rawAgreement = {
   sponsor_credit: "0",
   contractor_credit: "0",
 };
+const rawCloseout = {
+  agreement_id: "scope-1", sponsor: SPONSOR, contractor: CONTRACTOR, state: "OFFERED", verdict: "",
+  lot_id: "LOT-0001", completion_standard: "Release after authenticated completion.",
+  ratify_deadline: "2026-09-04T00:00:00Z", review_deadline: "2026-09-05T00:00:00Z",
+  negotiation_deadline: "", completion_publication: "", proposal_nonce: "0", proposal_contractor_gen: "0",
+  locked_amount: (10n ** 18n).toString(), sponsor_credit: "0", contractor_credit: "0",
+};
 
 
 function fakeClient(overrides: Partial<GenLayerClientLike> = {}): GenLayerClientLike {
@@ -44,6 +51,8 @@ function fakeClient(overrides: Partial<GenLayerClientLike> = {}): GenLayerClient
       if (functionName === "get_agreement") return JSON.stringify({ ...rawAgreement, agreement_id: args?.[0] });
       if (functionName === "get_account_agreement_ids") return "scope-1,scope-2";
       if (functionName === "get_credit_gen") return "1";
+      if (functionName === "get_closeout") return JSON.stringify(rawCloseout);
+      if (functionName === "get_closeout_credit_gen") return "1";
       if (functionName === "get_accounting") return JSON.stringify({
         received_gen: "2", locked_gen: "2", credited_gen: "0", withdrawn_gen: "0",
       });
@@ -129,16 +138,32 @@ describe("GenLayer contract adapter", () => {
     await adapter.acceptAllocation("scope-1", 2);
     await adapter.recoverExpired("scope-1");
     await adapter.withdrawCredit("scope-1");
+    await adapter.openCloseout({ agreementId: "scope-1", lotId: "LOT-0001", completionStandard: "Release after authenticated completion.", ratificationDeadline: "2026-09-04T00:00:00Z", reviewDeadline: "2026-09-05T00:00:00Z", negotiationWindowSeconds: 3600 });
+    await adapter.ratifyCloseout("scope-1");
+    await adapter.reviewCloseout("scope-1", "00734925-2025");
+    await adapter.proposeCloseoutAllocation("scope-1", 1);
+    await adapter.acceptCloseoutAllocation("scope-1", 1);
+    await adapter.recoverCloseout("scope-1");
+    await adapter.withdrawCloseoutCredit("scope-1");
 
     expect(vi.mocked(client.writeContract).mock.calls.map(([request]) => request.functionName)).toEqual([
       "create_agreement", "ratify_agreement", "request_review", "propose_split",
-      "accept_split", "recover_expired", "withdraw_credit",
+      "accept_split", "recover_expired", "withdraw_credit", "open_closeout", "ratify_closeout",
+      "request_closeout_review", "propose_closeout_split", "accept_closeout_split", "recover_closeout",
+      "withdraw_closeout_credit",
     ]);
     expect(client.writeContract).toHaveBeenNthCalledWith(1, expect.objectContaining({
       value: 2n * 10n ** 18n,
       args: expect.arrayContaining(["scope-1", CONTRACTOR, "00190662-2025"]),
     }));
     expect(provider.request).toHaveBeenCalledWith(expect.objectContaining({ method: "wallet_switchEthereumChain" }));
+    expect(client.writeContract).toHaveBeenNthCalledWith(8, expect.objectContaining({ value: 10n ** 18n }));
+  });
+
+  it("maps canonical closeout state in GEN", async () => {
+    const adapter = createGenLayerContractAdapter({ contractAddress: CONTRACT, createClient: () => fakeClient() });
+    await expect(adapter.getCloseout("scope-1")).resolves.toMatchObject({ agreementId: "scope-1", state: "OFFERED", lockedGen: 1, lotId: "LOT-0001" });
+    await expect(adapter.getCloseoutCredit("scope-1", CONTRACTOR)).resolves.toBe(1);
   });
 
 
