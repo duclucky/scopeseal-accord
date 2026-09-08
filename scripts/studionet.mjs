@@ -13,6 +13,7 @@ const EVIDENCE_DIR = join(PROJECT_ROOT, "docs", "evidence", "studionet", "milest
 const DEPLOYMENT_PATH = join(EVIDENCE_DIR, "deployment.json");
 const DEPLOYMENT_ATTEMPTS_PATH = join(EVIDENCE_DIR, "deployment-attempts.json");
 const LIFECYCLE_PATH = join(EVIDENCE_DIR, "lifecycle.json");
+const BROWSER_LIFECYCLE_PATH = join(EVIDENCE_DIR, "browser-lifecycle.json");
 const ARCHIVE_DIR = join(EVIDENCE_DIR, "archive");
 const RPC_URL = "https://studio.genlayer.com/api";
 const EXPLORER_URL = "https://explorer-studio.genlayer.com";
@@ -208,6 +209,25 @@ export function selectNextLifecycleAction(state) {
 }
 
 
+export function selectNextBrowserCloseoutAction(closeout, attempt = null) {
+  if (!closeout) return "STOP_MISSING";
+  if (closeout.state === "OFFERED") return "RATIFY_CLOSEOUT";
+  if (closeout.state === "ACTIVE") return "REVIEW_CLOSEOUT";
+  if (closeout.state === "RETRYABLE") {
+    const currentTransient = (
+      Number(attempt?.attemptNumber) === Number(closeout.attemptCount)
+      && attempt?.sourceStatus === "UNAVAILABLE"
+    );
+    return currentTransient ? "REVIEW_CLOSEOUT" : "REFUSE_RETRY";
+  }
+  if (closeout.state === "NEGOTIATION") return "NEED_BROWSER_SPONSOR";
+  if (closeout.state === "SETTLED" && Number(closeout.contractorCreditGen) > 0) return "WITHDRAW_CONTRACTOR";
+  if (closeout.state === "SETTLED" && Number(closeout.sponsorCreditGen) > 0) return "NEED_BROWSER_SPONSOR";
+  if (closeout.state === "CLOSED") return "COMPLETE";
+  return "STOP_INCONSISTENT";
+}
+
+
 export function retryDecision(agreement, attempt) {
   if (agreement?.state !== "RETRYABLE" || !attempt) return "REFUSE_STATE";
   if (Number(attempt.attemptNumber) !== Number(agreement.attemptCount)) return "REFUSE_MISMATCH";
@@ -379,6 +399,10 @@ function normalizedAgreement(value) {
     agreementId: field(value, "agreement_id", "agreementId"),
     sponsor: field(value, "sponsor"),
     contractor: field(value, "contractor"),
+    originalPublication: field(value, "original_publication", "originalPublication") ?? "",
+    buyerLegalId: field(value, "buyer_legal_id", "buyerLegalId") ?? "",
+    procedureId: field(value, "procedure_id", "procedureId") ?? "",
+    contractId: field(value, "contract_id", "contractId") ?? "",
     state: field(value, "state"),
     verdict: field(value, "verdict"),
     attemptCount: Number(field(value, "attempt_count", "attemptCount") ?? 0),
@@ -412,12 +436,25 @@ function normalizedCloseout(value) {
 }
 
 
-async function canonicalState(clients, deployment) {
+function normalizedCloseoutAttempt(value) {
+  if (!value || typeof value !== "object") return null;
+  return {
+    attemptNumber: Number(field(value, "attempt_number", "attemptNumber") ?? 0),
+    sourceStatus: field(value, "source_status", "sourceStatus") ?? "UNKNOWN",
+    sourceCoverage: field(value, "source_coverage", "sourceCoverage") ?? "UNKNOWN",
+    aggregateVerdict: field(value, "aggregate_verdict", "aggregateVerdict") ?? "UNKNOWN",
+    consequenceClass: field(value, "consequence_class", "consequenceClass") ?? "UNKNOWN",
+    rationale: field(value, "rationale") ?? "",
+  };
+}
+
+
+async function canonicalState(clients, deployment, agreementId = AGREEMENT_ID) {
   try {
-    const agreement = normalizedAgreement(await readView(clients.readClient, deployment.contractAddress, "get_agreement", [AGREEMENT_ID]));
+    const agreement = normalizedAgreement(await readView(clients.readClient, deployment.contractAddress, "get_agreement", [agreementId]));
     const accounting = await readView(clients.readClient, deployment.contractAddress, "get_accounting");
     let closeout = null;
-    try { closeout = normalizedCloseout(await readView(clients.readClient, deployment.contractAddress, "get_closeout", [AGREEMENT_ID])); } catch { closeout = null; }
+    try { closeout = normalizedCloseout(await readView(clients.readClient, deployment.contractAddress, "get_closeout", [agreementId])); } catch { closeout = null; }
     return { agreement, closeout, accounting };
   } catch {
     return { agreement: null, closeout: null, accounting: await readView(clients.readClient, deployment.contractAddress, "get_accounting") };
@@ -605,14 +642,14 @@ function actorClient(clients, actor) {
 }
 
 
-async function reconcilePending(file, clients, deployment, lifecyclePath = LIFECYCLE_PATH) {
-  if (!file.pendingTransaction) return canonicalState(clients, deployment);
+export async function reconcilePending(file, clients, deployment, lifecyclePath = LIFECYCLE_PATH, agreementId = AGREEMENT_ID, readCanonical = canonicalState) {
+  if (!file.pendingTransaction) return readCanonical(clients, deployment, agreementId);
   const pending = file.pendingTransaction;
   const client = actorClient(clients, pending.actor);
   const { finalized } = await waitForAcceptedAndFinalized(
     client, clients.TransactionStatus, pending.transactionHash, pending.action,
   );
-  const after = await canonicalState(clients, deployment);
+  const after = await readCanonical(clients, deployment, agreementId);
   file.transactions.push({
     ...pending,
     status: "FINALIZED",
@@ -628,7 +665,7 @@ async function reconcilePending(file, clients, deployment, lifecyclePath = LIFEC
 
 
 async function lifecycleWrite({
-  file, clients, deployment, action, actor, functionName, args, valueGEN = "0", lifecyclePath = LIFECYCLE_PATH,
+  file, clients, deployment, action, actor, functionName, args, valueGEN = "0", lifecyclePath = LIFECYCLE_PATH, agreementId = AGREEMENT_ID,
 }) {
   const client = actorClient(clients, actor);
   await client.initializeConsensusSmartContract();
@@ -647,7 +684,7 @@ async function lifecycleWrite({
   };
   writeJson(lifecyclePath, file);
   console.log(JSON.stringify({ stage: "SUBMITTED", action, actor, valueGEN, transactionHash: hash }, null, 2));
-  return reconcilePending(file, clients, deployment, lifecyclePath);
+  return reconcilePending(file, clients, deployment, lifecyclePath, agreementId);
 }
 
 
@@ -745,6 +782,125 @@ async function milestoneLifecycle() {
     } else throw new Error(`Milestone closeout is inconsistent (${state.closeout.state}).`);
   }
   throw new Error("Milestone lifecycle exceeded the bounded step limit.");
+}
+
+
+async function browserBaseRatify() {
+  const clients = await roleClients(true);
+  const deployment = readJson(DEPLOYMENT_PATH, undefined);
+  if (!deployment?.active || deployment.result !== "SUCCESS") throw new Error("No active successful milestone deployment exists.");
+  const identity = currentIdentity(clients.sponsorAccount.address, clients.contractorAccount.address);
+  if (deploymentDecision(deployment, identity) !== "RESUME") throw new Error("Milestone deployment identity does not match source and actors.");
+  const agreementId = "scopeseal-browser-ms001-001";
+  const lifecyclePath = BROWSER_LIFECYCLE_PATH;
+  const existing = readJson(lifecyclePath, undefined);
+  const file = existing?.agreementId === agreementId ? existing : {
+    network: "studionet",
+    chainId: CHAIN_ID,
+    agreementId,
+    contractAddress: deployment.contractAddress,
+    sponsor: clients.sponsorAccount.address,
+    contractor: clients.contractorAccount.address,
+    valueGEN: "2",
+    pendingTransaction: null,
+    transactions: [],
+  };
+  const state = await canonicalState(clients, deployment, agreementId);
+  if (!state.agreement) throw new Error("Browser agreement is not visible in canonical state.");
+  if (state.agreement.state !== "DRAFT") {
+    file.finalCanonical = state;
+    writeJson(lifecyclePath, file);
+    console.log(JSON.stringify({ Result: "ALREADY_PROGRESS", agreementId, state: state.agreement.state }, null, 2));
+    return;
+  }
+  const after = await lifecycleWrite({
+    file,
+    clients,
+    deployment,
+    action: "RATIFY_BROWSER_BASE",
+    actor: "contractor",
+    functionName: "ratify_agreement",
+    args: [agreementId],
+    lifecyclePath,
+    agreementId,
+  });
+  file.finalCanonical = after;
+  writeJson(lifecyclePath, file);
+  console.log(JSON.stringify({ Result: "SUCCESS", agreementId, state: after.agreement?.state ?? null }, null, 2));
+}
+
+
+async function browserInspect() {
+  const clients = await roleClients(false);
+  const deployment = readJson(DEPLOYMENT_PATH, undefined);
+  if (!deployment?.active || deployment.result !== "SUCCESS") throw new Error("No active successful milestone deployment exists.");
+  const agreementId = "scopeseal-browser-ms001-001";
+  const state = await canonicalState(clients, deployment, agreementId);
+  let closeoutAttempt = null;
+  if (state.closeout?.attemptCount > 0) {
+    const raw = await readView(clients.readClient, deployment.contractAddress, "get_closeout_attempt", [agreementId, state.closeout.attemptCount]);
+    closeoutAttempt = normalizedCloseoutAttempt(raw);
+  }
+  console.log(JSON.stringify({
+    network: "studionet",
+    contractAddress: deployment.contractAddress,
+    agreementId,
+    agreement: state.agreement,
+    closeout: state.closeout,
+    closeoutAttempt,
+    accounting: state.accounting,
+  }, null, 2));
+}
+
+
+async function browserCloseoutProgress() {
+  const clients = await roleClients(true);
+  const deployment = readJson(DEPLOYMENT_PATH, undefined);
+  if (!deployment?.active || deployment.result !== "SUCCESS") throw new Error("No active successful milestone deployment exists.");
+  const identity = currentIdentity(clients.sponsorAccount.address, clients.contractorAccount.address);
+  if (deploymentDecision(deployment, identity) !== "RESUME") throw new Error("Milestone deployment identity does not match source and actors.");
+  const agreementId = "scopeseal-browser-ms001-001";
+  const lifecyclePath = BROWSER_LIFECYCLE_PATH;
+  const file = readJson(lifecyclePath, undefined);
+  if (!file || file.agreementId !== agreementId || file.contractAddress !== deployment.contractAddress) {
+    throw new Error("Browser lifecycle evidence does not match the active agreement and deployment.");
+  }
+  if (file.contractor.toLowerCase() !== clients.contractorAccount.address.toLowerCase()) {
+    throw new Error("Browser closeout contractor does not match the authorized contractor signer.");
+  }
+  file.completionPublication = "00734925-2025";
+  let state = await reconcilePending(file, clients, deployment, lifecyclePath, agreementId);
+  for (let step = 0; step < 5; step += 1) {
+    let attempt = null;
+    if (state.closeout?.state === "RETRYABLE" && state.closeout.attemptCount > 0) {
+      const raw = await readView(clients.readClient, deployment.contractAddress, "get_closeout_attempt", [agreementId, state.closeout.attemptCount]);
+      attempt = normalizedCloseoutAttempt(raw);
+    }
+    const action = selectNextBrowserCloseoutAction(state.closeout, attempt);
+    if (action === "RATIFY_CLOSEOUT") {
+      state = await lifecycleWrite({ file, clients, deployment, action, actor: "contractor", functionName: "ratify_closeout", args: [agreementId], lifecyclePath, agreementId });
+    } else if (action === "REVIEW_CLOSEOUT") {
+      state = await lifecycleWrite({ file, clients, deployment, action, actor: "contractor", functionName: "request_closeout_review", args: [agreementId, file.completionPublication], lifecyclePath, agreementId });
+      if (state.closeout?.state === "RETRYABLE") {
+        file.finalCanonical = state; writeJson(lifecyclePath, file);
+        console.log(JSON.stringify({ Result: "RETRYABLE", agreementId, closeoutAttempt: state.closeout.attemptCount }, null, 2)); return;
+      }
+    } else if (action === "WITHDRAW_CONTRACTOR") {
+      state = await lifecycleWrite({ file, clients, deployment, action, actor: "contractor", functionName: "withdraw_closeout_credit", args: [agreementId], lifecyclePath, agreementId });
+    } else if (action === "NEED_BROWSER_SPONSOR") {
+      file.finalCanonical = state; writeJson(lifecyclePath, file);
+      console.log(JSON.stringify({ Result: "ACTION_REQUIRED", agreementId, actor: "browser sponsor", closeoutState: state.closeout?.state ?? null }, null, 2)); return;
+    } else if (action === "REFUSE_RETRY") {
+      file.finalCanonical = { ...state, closeoutAttempt: attempt }; file.result = "RETRYABLE_NO_CONSEQUENCE"; writeJson(lifecyclePath, file);
+      console.log(JSON.stringify({ Result: "REFUSE_STRUCTURAL_RETRY", agreementId, sourceStatus: attempt?.sourceStatus ?? "UNKNOWN", closeoutAttempt: state.closeout?.attemptCount ?? 0 }, null, 2)); return;
+    } else if (action === "COMPLETE") {
+      file.completedAt = new Date().toISOString(); file.finalCanonical = state; writeJson(lifecyclePath, file);
+      console.log(JSON.stringify({ Result: "SUCCESS", agreementId, closeoutState: "CLOSED", transactionCount: file.transactions.length }, null, 2)); return;
+    } else {
+      throw new Error(`Browser closeout is inconsistent (${state.closeout?.state ?? "ABSENT"}).`);
+    }
+  }
+  throw new Error("Browser closeout exceeded the bounded step limit.");
 }
 
 
@@ -1125,13 +1281,16 @@ async function main() {
   else if (command === "deploy") await deploy();
   else if (command === "lifecycle") await lifecycle();
   else if (command === "milestone-lifecycle") await milestoneLifecycle();
+  else if (command === "browser-base-ratify") await browserBaseRatify();
+  else if (command === "browser-inspect") await browserInspect();
+  else if (command === "browser-closeout-progress") await browserCloseoutProgress();
   else if (command === "retry") await retryLifecycle();
   else if (command === "recover") await recover();
   else if (command === "retire") await retire();
   else if (command === "quarantine") await quarantine();
   else if (command === "abandon-broken") await abandonBrokenMilestone();
   else if (command === "recover-superseded") await recoverSuperseded();
-  else throw new Error("Usage: node scripts/studionet.mjs <inspect|deploy|lifecycle|milestone-lifecycle|retry|recover|retire|quarantine|abandon-broken|recover-superseded>");
+  else throw new Error("Usage: node scripts/studionet.mjs <inspect|deploy|lifecycle|milestone-lifecycle|browser-base-ratify|browser-inspect|browser-closeout-progress|retry|recover|retire|quarantine|abandon-broken|recover-superseded>");
 }
 
 

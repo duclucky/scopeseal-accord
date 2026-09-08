@@ -1,6 +1,6 @@
 # MS-001 — Completion Retention Closeout
 
-Status: `BUILDING`
+Status: `VERIFIED`
 
 ## Pinned accepted baseline
 
@@ -69,7 +69,7 @@ Reuse surface: Procurement payment platforms, public-works sponsors, auditors, a
 | Contract count | `PASS` | The existing single contract owns agreement, closeout, evidence, and value. A second pass-through contract would add no trust boundary and is excluded. |
 | Differentiation | `PASS` | The workspace has amendment, incident, filing, tariff, appeal, and allocation primitives, but no official E5 post-performance retention closeout bound to an accepted ScopeSeal agreement. |
 | Claim-to-code | `PASS` | Every new claim is allocated to concrete methods/state/views/tests/network evidence in the Phase 4 matrix; no documentation-only claim is admitted. |
-| Full lifecycle | `PASS — PLANNED` | The selected slice requires real frontend writes through finality, canonical reload, and a Studionet E5 release or negotiation path before `VERIFIED`; selection does not claim that proof already exists. |
+| Full lifecycle | `PASS` | The primary Studionet lifecycle finalized funding, E5 review, release, and withdrawal at `CLOSED` / `RELEASE_RETENTION`. A separate Chrome wallet lifecycle finalized a 1 GEN closeout write, canonical reload, contractor ratification, and a real non-penalizing `MISMATCH -> RETRYABLE` tripwire. |
 | Scope honesty | `PASS` | E5 reports official disclosure, not physical performance truth or legal compliance. Single-lot only; no production adoption, multi-lot allocation, or external consumer is claimed. |
 
 ### Evidence Authority Matrix
@@ -262,3 +262,56 @@ UI implementation:
 `PASS`: every new claim has method/state/view/test/network evidence, every consequential write has a
 safety card, the only new purse has a complete destination matrix, scope/non-goals are explicit, and
 the UI direction was produced through `ui-ux-pro-max` without overriding the accepted visual language.
+
+## Phase 5 — bounded delta result
+
+- Contract remains one ASCII `ScopeSealAccord(gl.Contract)` with the accepted pinned Depends runner.
+- Public surface is 22 methods: 8 views and 14 writes. The delta adds one keyed single-lot closeout,
+  append-only attempts, independent credits, and exact 1 GEN accounting.
+- Frontend adds only `/agreements/:agreementId/closeout` and preserves the accepted shell, navigation,
+  palette, typography, transaction states, and wallet picker.
+- `ui-ux-pro-max` was invoked before frontend implementation; the verified UX result required a visible
+  five-stage progress indicator, persistent labels, immediate transaction feedback, and canonical reload.
+
+Phase 5 exit gate: `PASS`.
+
+## Phase 6 — local verification result
+
+Command: `npm run check`
+
+Fresh output on 2026-09-08: GenVM lint/validation PASS (`ScopeSealAccord`, 22 methods); 58 Python tests,
+14 deployment tests, and 46 frontend tests passed; TypeScript and the production Vite build passed.
+Chrome browser-local state reported Studionet RPC `ready`, without `Failed to fetch`/CORS, and rendered
+canonical `CLOSED`, `RELEASE_RETENTION`, `LOT-0001`, and zero locked/credit balances.
+
+Phase 6 exit gate: `PASS`.
+
+## Phase 7 — Studionet result
+
+- Active deployment: `0x6AD210a93E448BdF7A6aE8C05098fc1e25983FD0`.
+- Deployment tx: `0x37739328653c9f1de043f70bc3f65fcb7e9bc1d6700ed3903776ae20fe887e03`.
+- Source identity: commit `4eb6a0c5d2eb1b8ebf8bafa2ca8a0e30f7fedb6b`, source SHA-256
+  `1dd203f79ca69aa0bddc91c178e1ffff1556049afd3dd0999a73149c0ad1765b`, API `ScopeSealAccord/2`.
+- E5 review tx: `0x0e2b2c9013887211a0128f4299377f52d65497980b4b2ba93b30bd94f9c94689`.
+- Validator result: source/coverage `COMPLETE`; verdict `RELEASE_RETENTION`; derived consequence
+  `CREDIT_CONTRACTOR`.
+- Exactly 1 GEN was locked. Review created 1 GEN contractor credit; withdrawal ended `CLOSED`, with
+  active-revision accounting received 3 / withdrawn 3 GEN and zero locked/credited.
+- Chrome/OKX finalized a separate browser-sponsored 1 GEN closeout write at
+  `0x77274c2ea97a5826618ba945ac08dba6ac538ca5c637596ba63c545c54c11358`; the page showed the accepted
+  and finalized states and reloaded canonical `OFFERED` state from the new deployment.
+- The authorized contractor then ratified that browser closeout at
+  `0x498f5694a8e573e3ffb41a6c022960f48f27ba0fd079abfe4d6245ff0d28b915`. A deliberately mismatched E5
+  publication finalized at `0x12eddc49b008f504138d84f34050c085fb6d38eb20a697c11b892f94026c2dc3` as
+  `RETRYABLE` / `UNVERIFIABLE`, source `MISMATCH`, consequence `NO_CONSEQUENCE`; Chrome reloaded that
+  canonical state with 1 GEN still locked and both credits zero. The runner refuses structural retry.
+- Global active-revision accounting after both proof branches is received 6 / withdrawn 5 / locked 1 /
+  credited 0 GEN. The remaining browser proof retention is recoverable by its sponsor at
+  `2026-09-08T17:28:00.000Z`; it is not counted as the successful lifecycle and no recovery is claimed.
+- One earlier diagnostic revision is `ABANDONED_TESTNET` after strict semantic invariants produced
+  `UNVERIFIABLE`; its 1 GEN stays locked under the broken-contract exception and no consequence occurred.
+
+Phase 7 exit gate: `PASS`. The primary consequential lifecycle has safe finalized receipts and canonical
+GEN accounting, and the changed Chrome path performed a real wallet write against the new deployment,
+showed accepted/finalized, and reloaded canonical state. Browser-wallet proof remains distinguished from
+script-signed contractor actions.

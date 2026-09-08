@@ -167,6 +167,30 @@ describe("GenLayer contract adapter", () => {
   });
 
 
+  it("treats the GenLayer missing-key execution error as an absent closeout", async () => {
+    const client = fakeClient({
+      readContract: vi.fn(async ({ functionName }) => {
+        if (functionName === "get_closeout") throw new Error("Missing or invalid parameters. Double check you have provided the correct parameters. Details: execution failed Version: viem@2.56.1");
+        throw new Error(`Unexpected read ${functionName}`);
+      }),
+    });
+    const adapter = createGenLayerContractAdapter({ contractAddress: CONTRACT, createClient: () => client });
+    await expect(adapter.getCloseout("scope-1")).resolves.toBeNull();
+  });
+
+
+  it("treats an error-shaped canonical closeout response as absent", async () => {
+    const client = fakeClient({
+      readContract: vi.fn(async ({ functionName }) => {
+        if (functionName === "get_closeout") return JSON.stringify({ error: { message: "execution failed" } });
+        throw new Error(`Unexpected read ${functionName}`);
+      }),
+    });
+    const adapter = createGenLayerContractAdapter({ contractAddress: CONTRACT, createClient: () => client });
+    await expect(adapter.getCloseout("scope-1")).resolves.toBeNull();
+  });
+
+
   it("waits for accepted and successful finalized receipts without simulating finality", async () => {
     const client = fakeClient();
     const adapter = createGenLayerContractAdapter({ contractAddress: CONTRACT, createClient: () => client });

@@ -1,0 +1,245 @@
+{
+  "network": "studionet",
+  "chainId": 61999,
+  "contractAddress": "0x6AD210a93E448BdF7A6aE8C05098fc1e25983FD0",
+  "agreementId": "scopeseal-browser-ms001-001",
+  "sponsor": "0xbd733bc56ec4a55fa25c068b9306b0171335d199",
+  "contractor": "0x45aD397c438397A702B53a7499a78D08961D39Db",
+  "transactions": [
+    {
+      "action": "CREATE_BASE",
+      "actor": "sponsor",
+      "valueGEN": "2",
+      "transactionHash": "0xcc8bc9c4bc927d8ff7699690e2c187d90dc8ae01444a17229bf43d511aba8007",
+      "status": "FINALIZED",
+      "canonicalAfter": {
+        "state": "DRAFT",
+        "lockedGEN": 2,
+        "sponsorCreditGEN": 0,
+        "contractorCreditGEN": 0
+      }
+    },
+    {
+      "action": "RATIFY_BASE",
+      "actor": "contractor",
+      "valueGEN": "0",
+      "transactionHash": "0x4f46dd4848f296f452d71834154536cf93f006f394101f9b321d21979dc12c50",
+      "status": "FINALIZED_ERROR",
+      "executionResult": "ERROR",
+      "consensusResult": "MAJORITY_AGREE",
+      "reason": "Rejected by the contract because the ratification deadline had elapsed; accounting and state were unchanged."
+    },
+    {
+      "action": "RECOVER_EXPIRED",
+      "actor": "sponsor",
+      "valueGEN": "0",
+      "transactionHash": "0x3959c0445af527ec0903a188d87a3740ec61caed71b1f77eda6467c31007485d",
+      "status": "FINALIZED",
+      "canonicalAfter": {
+        "state": "SETTLED",
+        "verdict": "EXPIRED_RECOVERY",
+        "lockedGEN": 0,
+        "sponsorCreditGEN": 2,
+        "contractorCreditGEN": 0
+      }
+    },
+    {
+      "action": "WITHDRAW_CREDIT",
+      "actor": "sponsor",
+      "valueGEN": "0",
+      "transactionHash": "0x75a644c912ab9a73273a6fd2504642cf4452bcac7002b20654fa63b1e34657fa",
+      "status": "FINALIZED",
+      "canonicalAfter": {
+        "state": "CLOSED",
+        "verdict": "EXPIRED_RECOVERY",
+        "lockedGEN": 0,
+        "sponsorCreditGEN": 0,
+        "contractorCreditGEN": 0
+      }
+    },
+    {
+      "action": "OPEN_CLOSEOUT",
+      "actor": "sponsor",
+      "valueGEN": "1",
+      "transactionHash": "0x77274c2ea97a5826618ba945ac08dba6ac538ca5c637596ba63c545c54c11358",
+      "status": "FINALIZED",
+      "explorer": "https://explorer-studio.genlayer.com/tx/0x77274c2ea97a5826618ba945ac08dba6ac538ca5c637596ba63c545c54c11358",
+      "canonicalAfter": {
+        "state": "OFFERED",
+        "lockedGEN": 1,
+        "sponsorCreditGEN": 0,
+        "contractorCreditGEN": 0
+      }
+    },
+    {
+      "action": "RATIFY_CLOSEOUT",
+      "actor": "contractor",
+      "transactionHash": "0x498f5694a8e573e3ffb41a6c022960f48f27ba0fd079abfe4d6245ff0d28b915",
+      "submittedAt": "2026-09-08T15:36:35.372Z",
+      "valueGEN": "0",
+      "status": "FINALIZED",
+      "finalizedAt": "2026-09-08T15:37:14.000Z",
+      "receipt": {
+        "label": "RATIFY_CLOSEOUT",
+        "transactionHash": "0x498f5694a8e573e3ffb41a6c022960f48f27ba0fd079abfe4d6245ff0d28b915",
+        "status": "FINALIZED",
+        "txExecutionResult": "SUCCESS",
+        "consensusResult": "MAJORITY_AGREE",
+        "contractAddress": null
+      },
+      "explorer": "https://explorer-studio.genlayer.com/tx/0x498f5694a8e573e3ffb41a6c022960f48f27ba0fd079abfe4d6245ff0d28b915",
+      "canonicalAfter": {
+        "agreement": {
+          "agreementId": "scopeseal-browser-ms001-001",
+          "sponsor": "0xbd733bc56ec4a55fa25c068b9306b0171335d199",
+          "contractor": "0x45ad397c438397a702b53a7499a78d08961d39db",
+          "state": "CLOSED",
+          "verdict": "EXPIRED_RECOVERY",
+          "attemptCount": 0,
+          "modificationPublication": "",
+          "ratifyDeadline": "2026-09-08T14:30:00Z",
+          "reviewDeadline": "2026-09-08T15:28:00Z",
+          "negotiationDeadline": "",
+          "proposalNonce": 0,
+          "hasProposal": false,
+          "lockedGen": 0,
+          "sponsorCreditGen": 0,
+          "contractorCreditGen": 0
+        },
+        "closeout": {
+          "agreementId": "scopeseal-browser-ms001-001",
+          "state": "ACTIVE",
+          "verdict": "",
+          "attemptCount": 0,
+          "ratifyDeadline": "2026-09-08T15:53:00.000Z",
+          "reviewDeadline": "2026-09-08T17:28:00.000Z",
+          "negotiationDeadline": "",
+          "proposalNonce": 0,
+          "hasProposal": false,
+          "lockedGen": 1,
+          "sponsorCreditGen": 0,
+          "contractorCreditGen": 0
+        },
+        "accounting": {
+          "credited_gen": 0,
+          "locked_gen": 1,
+          "received_gen": 6,
+          "withdrawn_gen": 5
+        }
+      }
+    },
+    {
+      "action": "REVIEW_CLOSEOUT",
+      "actor": "contractor",
+      "transactionHash": "0x12eddc49b008f504138d84f34050c085fb6d38eb20a697c11b892f94026c2dc3",
+      "submittedAt": "2026-09-08T15:37:16.259Z",
+      "valueGEN": "0",
+      "status": "FINALIZED",
+      "finalizedAt": "2026-09-08T15:38:09.836Z",
+      "receipt": {
+        "label": "REVIEW_CLOSEOUT",
+        "transactionHash": "0x12eddc49b008f504138d84f34050c085fb6d38eb20a697c11b892f94026c2dc3",
+        "status": "FINALIZED",
+        "txExecutionResult": "SUCCESS",
+        "consensusResult": "MAJORITY_AGREE",
+        "contractAddress": null
+      },
+      "explorer": "https://explorer-studio.genlayer.com/tx/0x12eddc49b008f504138d84f34050c085fb6d38eb20a697c11b892f94026c2dc3",
+      "canonicalAfter": {
+        "agreement": {
+          "agreementId": "scopeseal-browser-ms001-001",
+          "sponsor": "0xbd733bc56ec4a55fa25c068b9306b0171335d199",
+          "contractor": "0x45ad397c438397a702b53a7499a78d08961d39db",
+          "state": "CLOSED",
+          "verdict": "EXPIRED_RECOVERY",
+          "attemptCount": 0,
+          "modificationPublication": "",
+          "ratifyDeadline": "2026-09-08T14:30:00Z",
+          "reviewDeadline": "2026-09-08T15:28:00Z",
+          "negotiationDeadline": "",
+          "proposalNonce": 0,
+          "hasProposal": false,
+          "lockedGen": 0,
+          "sponsorCreditGen": 0,
+          "contractorCreditGen": 0
+        },
+        "closeout": {
+          "agreementId": "scopeseal-browser-ms001-001",
+          "state": "RETRYABLE",
+          "verdict": "UNVERIFIABLE",
+          "attemptCount": 1,
+          "ratifyDeadline": "2026-09-08T15:53:00.000Z",
+          "reviewDeadline": "2026-09-08T17:28:00.000Z",
+          "negotiationDeadline": "",
+          "proposalNonce": 0,
+          "hasProposal": false,
+          "lockedGen": 1,
+          "sponsorCreditGen": 0,
+          "contractorCreditGen": 0
+        },
+        "accounting": {
+          "credited_gen": 0,
+          "locked_gen": 1,
+          "received_gen": 6,
+          "withdrawn_gen": 5
+        }
+      }
+    }
+  ],
+  "finalCanonical": {
+    "agreement": {
+      "agreementId": "scopeseal-browser-ms001-001",
+      "sponsor": "0xbd733bc56ec4a55fa25c068b9306b0171335d199",
+      "contractor": "0x45ad397c438397a702b53a7499a78d08961d39db",
+      "originalPublication": "00190662-2025",
+      "buyerLegalId": "3267368TH",
+      "procedureId": "7f56490a-c5ba-4922-853b-07b18b0d14c1",
+      "contractId": "417379",
+      "state": "CLOSED",
+      "verdict": "EXPIRED_RECOVERY",
+      "attemptCount": 0,
+      "modificationPublication": "",
+      "ratifyDeadline": "2026-09-08T14:30:00Z",
+      "reviewDeadline": "2026-09-08T15:28:00Z",
+      "negotiationDeadline": "",
+      "proposalNonce": 0,
+      "hasProposal": false,
+      "lockedGen": 0,
+      "sponsorCreditGen": 0,
+      "contractorCreditGen": 0
+    },
+    "closeout": {
+      "agreementId": "scopeseal-browser-ms001-001",
+      "state": "RETRYABLE",
+      "verdict": "UNVERIFIABLE",
+      "attemptCount": 1,
+      "ratifyDeadline": "2026-09-08T15:53:00.000Z",
+      "reviewDeadline": "2026-09-08T17:28:00.000Z",
+      "negotiationDeadline": "",
+      "proposalNonce": 0,
+      "hasProposal": false,
+      "lockedGen": 1,
+      "sponsorCreditGen": 0,
+      "contractorCreditGen": 0
+    },
+    "accounting": {
+      "credited_gen": 0,
+      "locked_gen": 1,
+      "received_gen": 6,
+      "withdrawn_gen": 5
+    },
+    "closeoutAttempt": {
+      "attemptNumber": 1,
+      "sourceStatus": "MISMATCH",
+      "sourceCoverage": "INCOMPLETE",
+      "aggregateVerdict": "UNVERIFIABLE",
+      "consequenceClass": "NO_CONSEQUENCE",
+      "rationale": "Official completion authority binding failed."
+    }
+  },
+  "completionPublication": "00734925-2025",
+  "result": "RETRYABLE_NO_CONSEQUENCE",
+  "stoppedAt": "2026-09-08T15:43:11.418Z",
+  "recoveryAvailableAt": "2026-09-08T17:28:00.000Z",
+  "pendingTransaction": null
+}

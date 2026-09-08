@@ -224,9 +224,13 @@ export function createGenLayerContractAdapter(options: AdapterOptions): Contract
     recoverExpired: (id) => write("recover_expired", [id]),
     withdrawCredit: (id) => write("withdraw_credit", [id]),
     getCloseout: async (id) => {
-      try { return mapCloseout(parseObject(await read("get_closeout", [id]))); }
+      try {
+        const parsed = parseObject(await read("get_closeout", [id]));
+        if (Object.prototype.hasOwnProperty.call(parsed, "error")) return null;
+        return mapCloseout(parsed);
+      }
       catch (cause) {
-        if (cause instanceof Error && /not found|missing key|KeyError/iu.test(cause.message)) return null;
+        if (cause instanceof Error && /not found|missing key|KeyError|gen_call\).*execution failed|Missing or invalid parameters[\s\S]*Details: execution failed/iu.test(cause.message)) return null;
         throw cause;
       }
     },

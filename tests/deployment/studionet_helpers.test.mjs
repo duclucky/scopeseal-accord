@@ -7,9 +7,11 @@ import {
   mergeEnvironment,
   orderPendingRecoveries,
   quarantineDecision,
+  reconcilePending,
   retryDecision,
   retirementDecision,
   safeReceiptProjection,
+  selectNextBrowserCloseoutAction,
   selectNextLifecycleAction,
   valueForCreateAgreement,
 } from "../../scripts/studionet.mjs";
@@ -99,6 +101,44 @@ test("lifecycle selector resumes from canonical state without replay", () => {
   assert.equal(selectNextLifecycleAction({ state: "SETTLED", sponsorCreditGen: 1, contractorCreditGen: 0 }), "WITHDRAW_SPONSOR");
   assert.equal(selectNextLifecycleAction({ state: "CLOSED" }), "COMPLETE");
   assert.equal(selectNextLifecycleAction({ state: "UNKNOWN" }), "STOP_INCONSISTENT");
+});
+
+
+test("browser closeout runner uses only the authorized contractor actions", () => {
+  assert.equal(selectNextBrowserCloseoutAction({ state: "OFFERED" }), "RATIFY_CLOSEOUT");
+  assert.equal(selectNextBrowserCloseoutAction({ state: "ACTIVE" }), "REVIEW_CLOSEOUT");
+  assert.equal(selectNextBrowserCloseoutAction(
+    { state: "RETRYABLE", attemptCount: 2 },
+    { attemptNumber: 2, sourceStatus: "UNAVAILABLE" },
+  ), "REVIEW_CLOSEOUT");
+  assert.equal(selectNextBrowserCloseoutAction(
+    { state: "RETRYABLE", attemptCount: 2 },
+    { attemptNumber: 2, sourceStatus: "MISMATCH" },
+  ), "REFUSE_RETRY");
+  assert.equal(selectNextBrowserCloseoutAction({ state: "RETRYABLE", attemptCount: 2 }), "REFUSE_RETRY");
+  assert.equal(selectNextBrowserCloseoutAction({ state: "NEGOTIATION" }), "NEED_BROWSER_SPONSOR");
+  assert.equal(selectNextBrowserCloseoutAction({ state: "SETTLED", sponsorCreditGen: 0, contractorCreditGen: 1 }), "WITHDRAW_CONTRACTOR");
+  assert.equal(selectNextBrowserCloseoutAction({ state: "SETTLED", sponsorCreditGen: 1, contractorCreditGen: 0 }), "NEED_BROWSER_SPONSOR");
+  assert.equal(selectNextBrowserCloseoutAction({ state: "CLOSED" }), "COMPLETE");
+});
+
+
+test("pending reconciliation reads the requested browser agreement id", async () => {
+  let observedAgreementId = null;
+  const expected = { agreement: { agreementId: "browser-1" } };
+  const result = await reconcilePending(
+    { pendingTransaction: null },
+    {},
+    { contractAddress: "0xcontract" },
+    "unused.json",
+    "browser-1",
+    async (_clients, _deployment, agreementId) => {
+      observedAgreementId = agreementId;
+      return expected;
+    },
+  );
+  assert.equal(observedAgreementId, "browser-1");
+  assert.equal(result, expected);
 });
 
 

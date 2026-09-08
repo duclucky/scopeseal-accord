@@ -1,0 +1,13 @@
+{
+  "observedAt": "2026-09-08T15:42:00.000Z",
+  "source": "https://publications.europa.eu/webapi/rdf/sparql",
+  "lookup": {
+    "originalPublication": "00190662-2025",
+    "buyerLegalId": "3267368TH",
+    "procedureId": "7f56490a-c5ba-4922-853b-07b18b0d14c1",
+    "contractId": "417379",
+    "requiredEvidenceClass": "E5 completion"
+  },
+  "matchingCompletionRecords": 0,
+  "decision": "NO_RETRY_WITH_MISMATCHED_EVIDENCE"
+}

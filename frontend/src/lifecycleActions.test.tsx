@@ -114,4 +114,25 @@ describe("browser lifecycle controls", () => {
     await user.click(await screen.findByRole("button", { name: "Withdraw credit" }));
     expect(settled.withdrawCredit).toHaveBeenCalledWith("scope-1");
   });
+
+  it("surfaces a closeout read failure after the agreement read succeeds", async () => {
+    const contract = adapter(agreement("CLOSED"));
+    contract.getCloseout = vi.fn(async () => { throw new Error("closeout canonical read failed"); });
+    await renderConnected("/agreements/scope-1/closeout", contract, SPONSOR);
+    expect(await screen.findByRole("alert")).toHaveTextContent("closeout canonical read failed");
+  });
+
+  it("submits closeout deadlines from the rendered form values", async () => {
+    const contract = adapter(agreement("CLOSED"));
+    await renderConnected("/agreements/scope-1/closeout", contract, SPONSOR);
+    const ratify = await screen.findByLabelText("Ratification deadline") as HTMLInputElement;
+    const review = screen.getByLabelText("Review deadline") as HTMLInputElement;
+    ratify.value = "2026-09-08T22:35";
+    review.value = "2026-09-09T00:15";
+    fireEvent.submit(screen.getByRole("button", { name: "Fund 1 GEN closeout" }).closest("form")!);
+    await vi.waitFor(() => expect(contract.openCloseout).toHaveBeenCalledWith(expect.objectContaining({
+      ratificationDeadline: new Date("2026-09-08T22:35").toISOString(),
+      reviewDeadline: new Date("2026-09-09T00:15").toISOString(),
+    })));
+  });
 });
