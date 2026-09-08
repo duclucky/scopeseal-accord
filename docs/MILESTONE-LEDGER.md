@@ -30,7 +30,7 @@ No milestone has been submitted yet.
 
 ## Current phase pointer
 
-`MS-001` — `VERIFIED` after local verification, a finalized successful Studionet lifecycle, and a finalized Chrome/OKX write with canonical reload.
+`MS-001` — `SUBMISSION_READY` after local/CI verification, finalized Studionet/browser evidence, public GitHub history, verified Vercel production, and a self-contained Portal packet. Final Portal action is not authorized yet.
 
 ## Cross-phase claim and evidence inventory
 
@@ -136,7 +136,7 @@ while the accepted Project remains the amendment baseline.
 
 | Milestone ID | Title | Status | Baseline reference | Delta fingerprint | Commit range | Deployment identity | Evidence index | Portal reference | Outcome date | Supersedes/extends | Lessons and follow-up |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `MS-001` | Completion Retention Closeout | `VERIFIED` | Accepted commit `f4d7cec`; Portal Revision 1 Published; Studionet `0x8837...E879` | Official TED E5 completion judgment controls a separately funded 1 GEN retention and new closeout states/credits | `f4d7cec..4eb6a0c` plus final evidence/docs commits pending | Studionet `0x6AD210...83FD0`; primary E5 lifecycle `RELEASE_RETENTION`; Chrome/OKX finalized 1 GEN closeout funding and canonical reload; separate mismatched-E5 tripwire stayed `RETRYABLE` with no consequence | [Dossier](milestones/MS-001/README.md) | `NOT_SUBMITTED` | Extends accepted Project; no earlier Milestone | Single-lot only; multi-lot and consumer adoption remain backlog; structural mismatch retries are refused |
+| `MS-001` | Completion Retention Closeout | `SUBMISSION_READY` | Accepted commit `f4d7cec`; Portal Revision 1 Published; Studionet `0x8837...E879` | Official TED E5 completion judgment controls a separately funded 1 GEN retention and new closeout states/credits | Implementation/evidence `f4d7cec..c8f4381`; submission packet commit pending | Studionet `0x6AD210...83FD0`; primary E5 lifecycle `RELEASE_RETENTION`; Chrome/OKX finalized 1 GEN closeout funding and canonical reload; production https://scopeseal-accord.vercel.app | [Dossier](milestones/MS-001/README.md) | `NOT_SUBMITTED` | Extends accepted Project; no earlier Milestone | Single-lot only; multi-lot and consumer adoption remain backlog; structural mismatch retries are refused |
 
 Exactly one phase is selected.
 

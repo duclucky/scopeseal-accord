@@ -53,3 +53,13 @@ withdrawn 5 / locked 1 / credited 0 GEN; sponsor recovery becomes available at
 `0x9eD134a2D1b39071145A2958b798e1B3c2cf2611` is archived as `ABANDONED_TESTNET`. Its E5 review produced
 a non-penalizing `UNVERIFIABLE`; 1 GEN remained locked, no credits or consequence occurred, and no
 further value will be sent to it.
+
+## Public deployment verification
+
+- GitHub implementation/evidence commit: https://github.com/duclucky/scopeseal-accord/commit/c8f438131412923b039e7f89921f65713f44cc56
+- Vercel production deployment: `dpl_FEWSGHwnuTiioksXndKnRiBN9T3j`
+- Production alias: https://scopeseal-accord.vercel.app
+- HTTP result: `200 OK`; body includes the application title and `<div id="root"></div>`.
+- Same-origin RPC result: `eth_chainId -> 0xf22f`.
+- Chrome production result: Studionet RPC `ready`; canonical browser closeout state
+  `RETRYABLE` / `UNVERIFIABLE`; 1 GEN locked; zero credits.

@@ -1,6 +1,6 @@
 # MS-001 — Completion Retention Closeout
 
-Status: `VERIFIED`
+Status: `SUBMISSION_READY`
 
 ## Pinned accepted baseline
 
@@ -315,3 +315,43 @@ Phase 7 exit gate: `PASS`. The primary consequential lifecycle has safe finalize
 GEN accounting, and the changed Chrome path performed a real wallet write against the new deployment,
 showed accepted/finalized, and reloaded canonical state. Browser-wallet proof remains distinguished from
 script-signed contractor actions.
+
+## Phase 8 — public surfaces
+
+- Existing Git history was preserved and `main` advanced from accepted baseline `f4d7cec` through the
+  milestone implementation/evidence commit `c8f438131412923b039e7f89921f65713f44cc56`.
+- Public commit: https://github.com/duclucky/scopeseal-accord/commit/c8f438131412923b039e7f89921f65713f44cc56
+- Production deployment: Vercel `dpl_FEWSGHwnuTiioksXndKnRiBN9T3j`, aliased to
+  https://scopeseal-accord.vercel.app.
+- `curl -I` returned HTTP 200; the response body contained the ScopeSeal Accord title and React root;
+  the live same-origin proxy returned Studionet chain ID `0xf22f`.
+- Chrome loaded the production route
+  https://scopeseal-accord.vercel.app/agreements/scopeseal-browser-ms001-001/closeout and rendered
+  Studionet RPC `ready` plus canonical `RETRYABLE`, `UNVERIFIABLE`, 1 GEN locked, and zero credits.
+- The first Vercel build in this phase was superseded because it did not receive the ignored local
+  `VITE_*` build values. The public contract/RPC/Explorer values are now persisted in the Vercel
+  Production environment; the final deployment succeeded without per-command build flags. No wallet
+  key or secret entered the frontend.
+
+Phase 8 exit gate: `PASS`. The existing public repo retains its accepted history, the milestone commits
+are public, tracked/history path scans contain no forbidden control or secret files, and the live product
+path is verified against the changed Studionet deployment.
+
+## Phase 9 — submission package
+
+- Cross-checking contract source, the 118-test local gate, public CI, current Studionet evidence,
+  dossier/README, and live Chrome output found no unsupported core claim.
+- GitHub Actions run https://github.com/duclucky/scopeseal-accord/actions/runs/34247307347 completed
+  `success` for commit `c8f4381`.
+- The Portal Changes & Improvements field is 971 characters and is stored separately from the longer
+  evidence packet at [the copy-ready note](../../submission/milestone-ms-001-notes.txt).
+- The complete self-contained Milestones packet is
+  [docs/MILESTONE-SUBMISSION-MS-001.md](../../MILESTONE-SUBMISSION-MS-001.md).
+- Exact contract/test/network/browser/accounting facts are listed in that packet. No production adoption,
+  successful browser E5 verdict, recovery of the browser tripwire retention, mainnet, legal conclusion,
+  physical completion proof, or multi-lot support is claimed.
+- Recommended Portal category is `Milestones`; the accepted Project remains category `Projects`.
+
+Phase 9 exit gate: `PASS`. `MS-001` is `SUBMISSION_READY`; all URLs and metrics are verified and the
+packet is self-contained. The final Portal control has not been used and requires explicit action-time
+authorization.
