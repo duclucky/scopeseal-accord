@@ -85,6 +85,11 @@ def test_two_party_credits_close_only_after_both_withdraw(
     mock_semantic_review(direct_vm, "MATERIAL_AMENDMENT")
     direct_vm.sender = direct_alice
     contract.request_review("grove-island-01", "00587863-2026")
+    attempt = contract.get_review_attempt("grove-island-01", 1)
+    assert field(contract.get_agreement("grove-island-01"), "state") == "NEGOTIATION", (
+        field(attempt, "source_status"), field(attempt, "source_coverage"),
+        field(attempt, "aggregate_verdict"), field(attempt, "rationale"),
+    )
     contract.propose_split("grove-island-01", 1)
     direct_vm.sender = direct_bob
     contract.accept_split("grove-island-01", 1)

@@ -86,11 +86,11 @@ def _mock_completion(vm, **overrides):
 def _mock_closeout_semantics(vm, verdict):
     vm.mock_llm(
         r"(?s).*ScopeSeal Accord completion closeout reviewer.*",
-        json.dumps({
+        json.dumps(json.dumps({
             "entity_results": [{"entity_id": "COMPLETION", "verdict": verdict}],
             "aggregate_verdict": verdict,
             "rationale": "The authenticated completion record satisfies the locked release standard.",
-        }),
+        })),
     )
 
 

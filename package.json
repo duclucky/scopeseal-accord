@@ -19,10 +19,14 @@
     "studionet:retire": "node scripts/studionet.mjs retire",
     "studionet:quarantine": "node scripts/studionet.mjs quarantine",
     "studionet:abandon-broken": "node scripts/studionet.mjs abandon-broken",
-    "studionet:recover-superseded": "node scripts/studionet.mjs recover-superseded"
+    "studionet:recover-superseded": "node scripts/studionet.mjs recover-superseded",
+    "studio-dev:inspect": "node scripts/studio-dev.mjs inspect",
+    "studio-dev:deploy": "node scripts/studio-dev.mjs deploy",
+    "studio-dev:lifecycle": "node scripts/studio-dev.mjs lifecycle"
   },
   "dependencies": {
-    "genlayer-js": "1.1.8"
+    "genlayer-js": "1.1.8",
+    "genlayer-js-rc": "npm:genlayer-js@2.0.0-rc.1"
   },
   "devDependencies": {
     "genlayer": "0.39.2"

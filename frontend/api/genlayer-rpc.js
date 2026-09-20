@@ -1,4 +1,4 @@
-const STUDIONET_RPC = "https://studio.genlayer.com/api";
+const STUDIO_DEV_RPC = "https://studio-next.genlayer.com/api";
 const MAX_REQUEST_BYTES = 32_768;
 const MAX_RESPONSE_BYTES = 524_288;
 const READ_METHODS = new Set(["eth_chainId", "gen_call"]);
@@ -46,7 +46,7 @@ export default async function handler(request, response) {
     return fail(response, 413, "RPC request is too large.");
   }
   try {
-    const upstream = await fetch(STUDIONET_RPC, {
+    const upstream = await fetch(STUDIO_DEV_RPC, {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: serialized,
@@ -58,6 +58,6 @@ export default async function handler(request, response) {
     response.setHeader("content-type", "application/json; charset=utf-8");
     return response.status(upstream.status).send(body);
   } catch {
-    return fail(response, 502, "Studionet read RPC is temporarily unavailable.");
+    return fail(response, 502, "Studio Dev read RPC is temporarily unavailable.");
   }
 }

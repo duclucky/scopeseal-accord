@@ -15,9 +15,9 @@ export const unconfiguredContract: ContractAdapter = {
   configuration: {
     readConfigured: false,
     writeConfigured: false,
-    networkName: "Studionet",
+    networkName: "Studio Dev",
     icReadPath: "/genlayer-rpc",
-    walletWriteChainId: "0xf22f",
+    walletWriteChainId: "0xf22d",
   },
   async getAgreement() { return unavailable(); },
   async listAgreements() { return unavailable(); },

@@ -6,7 +6,7 @@ export default defineConfig({
   server: {
     proxy: {
       "/genlayer-rpc": {
-        target: "https://studio.genlayer.com",
+        target: "https://studio-next.genlayer.com",
         changeOrigin: true,
         secure: true,
         rewrite: () => "/api",

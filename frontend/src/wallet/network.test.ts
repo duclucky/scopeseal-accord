@@ -1,17 +1,17 @@
 import { describe, expect, it, vi } from "vitest";
-import { ensureWalletChain, STUDIONET_WALLET_CHAIN } from "./network";
+import { ensureWalletChain, STUDIO_DEV_WALLET_CHAIN } from "./network";
 import type { Eip1193Provider } from "./types";
 
-describe("Studionet wallet network", () => {
+describe("Studio Dev wallet network", () => {
   it("uses the verified 61999 chain identifier for switching", async () => {
     const request = vi.fn().mockResolvedValue(null);
     const wallet = { request } satisfies Eip1193Provider;
 
-    await ensureWalletChain(wallet, { ...STUDIONET_WALLET_CHAIN, rpcUrls: ["https://wallet-rpc.example"] });
+    await ensureWalletChain(wallet, { ...STUDIO_DEV_WALLET_CHAIN, rpcUrls: ["https://wallet-rpc.example"] });
 
     expect(request).toHaveBeenCalledWith({
       method: "wallet_switchEthereumChain",
-      params: [{ chainId: "0xf22f" }],
+      params: [{ chainId: "0xf22d" }],
     });
   });
 
@@ -20,16 +20,16 @@ describe("Studionet wallet network", () => {
     const request = vi.fn().mockRejectedValueOnce(missing).mockResolvedValueOnce(null);
     const wallet = { request } satisfies Eip1193Provider;
 
-    await ensureWalletChain(wallet, { ...STUDIONET_WALLET_CHAIN, rpcUrls: ["https://wallet-rpc.example"] });
+    await ensureWalletChain(wallet, { ...STUDIO_DEV_WALLET_CHAIN, rpcUrls: ["https://wallet-rpc.example"] });
 
     expect(request).toHaveBeenNthCalledWith(2, {
       method: "wallet_addEthereumChain",
-      params: [expect.objectContaining({ chainId: "0xf22f", rpcUrls: ["https://wallet-rpc.example"] })],
+      params: [expect.objectContaining({ chainId: "0xf22d", rpcUrls: ["https://wallet-rpc.example"] })],
     });
 
     const unconfigured = { request: vi.fn().mockRejectedValue(missing) } satisfies Eip1193Provider;
     await expect(
-      ensureWalletChain(unconfigured, { ...STUDIONET_WALLET_CHAIN, rpcUrls: [] }),
-    ).rejects.toThrow("Wallet-compatible Studionet RPC is not configured");
+      ensureWalletChain(unconfigured, { ...STUDIO_DEV_WALLET_CHAIN, rpcUrls: [] }),
+    ).rejects.toThrow("Wallet-compatible Studio Dev RPC is not configured");
   });
 });

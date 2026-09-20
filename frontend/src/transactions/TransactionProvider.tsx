@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from "react";
-import type { TransactionReference } from "../adapters/contract";
+import type { ProtocolFeeQuote, TransactionOutcome, TransactionReference } from "../adapters/contract";
 
 export type TransactionPhase = "idle" | "submitting" | "submitted" | "accepted" | "finalized" | "failed";
 
@@ -7,6 +7,8 @@ export type TransactionState = {
   phase: TransactionPhase;
   label?: string;
   hash?: string;
+  feeQuote?: ProtocolFeeQuote;
+  feeOutcome?: TransactionOutcome;
   error?: string;
 };
 
@@ -14,7 +16,7 @@ type TransactionOperation = {
   label: string;
   submit: () => Promise<TransactionReference>;
   waitForAccepted: (hash: string) => Promise<void>;
-  waitForFinality: (hash: string) => Promise<void>;
+  waitForFinality: (hash: string) => Promise<TransactionOutcome | void>;
   reload: () => Promise<void>;
 };
 
@@ -33,17 +35,18 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
     setState({ phase: "submitting", label });
     try {
       const transaction = await submit();
-      setState({ phase: "submitted", label, hash: transaction.hash });
+      setState({ phase: "submitted", label, hash: transaction.hash, feeQuote: transaction.feeQuote });
       await waitForAccepted(transaction.hash);
-      setState({ phase: "accepted", label, hash: transaction.hash });
-      await waitForFinality(transaction.hash);
+      setState({ phase: "accepted", label, hash: transaction.hash, feeQuote: transaction.feeQuote });
+      const feeOutcome = await waitForFinality(transaction.hash);
       await reload();
-      setState({ phase: "finalized", label, hash: transaction.hash });
+      setState({ phase: "finalized", label, hash: transaction.hash, feeQuote: transaction.feeQuote, feeOutcome: feeOutcome || undefined });
     } catch (cause) {
       setState((current) => ({
         phase: "failed",
         label,
-        hash: current.phase === "submitted" ? current.hash : undefined,
+        hash: ["submitted", "accepted"].includes(current.phase) ? current.hash : undefined,
+        feeQuote: current.feeQuote,
         error: cause instanceof Error ? cause.message : "Transaction failed",
       }));
     }

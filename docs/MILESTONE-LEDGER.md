@@ -5,7 +5,10 @@
 - Project: ScopeSeal Accord
 - Track: Projects; subsequent updates use Portal contribution type `Milestones`
 - Repository: https://github.com/duclucky/scopeseal-accord
-- Accepted repository baseline: `f4d7cec499a39846ad8079b2d630d074aea6f039`
+- Accepted Project Revision 1 baseline: `f4d7cec499a39846ad8079b2d630d074aea6f039`
+- Current accepted Milestone v1 repository baseline: `2488bf6d04c99f955ff433904eb1cd71ae5cdd45` (implementation/evidence through `c8f438131412923b039e7f89921f65713f44cc56`; submission packet through `2488bf6`)
+- Current accepted Milestone v1 Portal record: https://portal.genlayer.foundation/contribution/195212
+- Current accepted Milestone v1 network identity: legacy Studionet `0x6AD210a93E448BdF7A6aE8C05098fc1e25983FD0`; this is not a Studio Dev deployment
 - Accepted Portal record: https://portal.genlayer.foundation/builders/explorer/scopeseal-accord
 - Portal management record: https://portal.genlayer.foundation/builders/explorer/manage/206
 - Verified Portal outcome: `Published` (Revision 1, displayed update date 2026-09-06)
@@ -26,11 +29,11 @@ from elapsed time or repository activity.
 | Milestone ID | Title | Status | Baseline reference | Delta fingerprint | Commit range | Deployment identity | Evidence index | Portal reference | Outcome date | Supersedes/extends | Lessons and follow-up |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 
-No milestone has been submitted yet.
+At initial ledger creation, no milestone had been submitted. The dated MS-001 outcome amendment below supersedes that historical snapshot.
 
 ## Current phase pointer
 
-`MS-001` — `SUBMISSION_READY` after local/CI verification, finalized Studionet/browser evidence, public GitHub history, verified Vercel production, and a self-contained Portal packet. Final Portal action is not authorized yet.
+`MS-002` — `SELECTED` after the 2026-09-21 quality, overlap, and gate audit below. `MS-001` is `ACCEPTED` on the authenticated Portal. The historical `SUBMISSION_READY` record below remains as a snapshot and is corrected by the dated outcome amendment.
 
 ## Cross-phase claim and evidence inventory
 
@@ -136,16 +139,57 @@ while the accepted Project remains the amendment baseline.
 
 | Milestone ID | Title | Status | Baseline reference | Delta fingerprint | Commit range | Deployment identity | Evidence index | Portal reference | Outcome date | Supersedes/extends | Lessons and follow-up |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `MS-001` | Completion Retention Closeout | `SUBMISSION_READY` | Accepted commit `f4d7cec`; Portal Revision 1 Published; Studionet `0x8837...E879` | Official TED E5 completion judgment controls a separately funded 1 GEN retention and new closeout states/credits | Implementation/evidence `f4d7cec..c8f4381`; submission packet `ec295db` | Studionet `0x6AD210...83FD0`; primary E5 lifecycle `RELEASE_RETENTION`; Chrome/OKX finalized 1 GEN closeout funding and canonical reload; production https://scopeseal-accord.vercel.app | [Dossier](milestones/MS-001/README.md) | `NOT_SUBMITTED` | Extends accepted Project; no earlier Milestone | Single-lot only; multi-lot and consumer adoption remain backlog; structural mismatch retries are refused |
+| `MS-001` | Completion Retention Closeout | `ACCEPTED` | Accepted commit `f4d7cec`; Portal Revision 1 Published; Studionet `0x8837...E879` | Official TED E5 completion judgment controls a separately funded 1 GEN retention and new closeout states/credits | Implementation/evidence `f4d7cec..c8f4381`; packet/accepted repo head `2488bf6` | Legacy Studionet `0x6AD210...83FD0`; primary E5 lifecycle `RELEASE_RETENTION`; Chrome/OKX finalized 1 GEN closeout funding and canonical reload; production https://scopeseal-accord.vercel.app | [Dossier](milestones/MS-001/README.md) | [Portal Milestone v1](https://portal.genlayer.foundation/contribution/195212) | 2026-09-08 (Portal display; acceptance observed 2026-09-21) | Extends accepted Project; no earlier Milestone | Accepted with 300 pts; single-lot only; multi-lot and consumer adoption remain backlog; structural mismatch retries are refused |
 
-Exactly one phase is selected.
+Historical selection record: exactly one phase was selected for MS-001 at that time. MS-001 is now accepted; no MS-002 candidate has yet been selected.
 
 ## Portal outcome log
 
 | Observed at | Record | Verified state | Routing decision |
 | --- | --- | --- | --- |
 | 2026-09-08T17:06:35+07:00 | [ScopeSeal Accord live record](https://portal.genlayer.foundation/builders/explorer/scopeseal-accord) and authenticated project manager `/manage/206` | Revision 1 `Published`; live record exposes the accepted repo, app, and Studio contract | Initialize the first ledger and continue to baseline recovery; no pending phase blocks selection |
+| 2026-09-21T05:43:19+07:00 | [Completion Retention Closeout contribution 195212](https://portal.genlayer.foundation/contribution/195212) in the authenticated Ducky account and My Submissions | Milestone v1 `Accepted`, 300 pts; Portal displays contribution/submission date 2026-09-08 and the submitted compare, CI, Studio and Explorer evidence | Promote the submitted MS-001 end state to the accepted baseline; evaluate MS-002 against both Revision 1 and MS-001, without recounting either |
 
 ## Append-only amendments
 
-None.
+2026-09-21: The earlier `MS-001 / SUBMISSION_READY / NOT_SUBMITTED` text was the accurate local snapshot before Portal submission. The authenticated Portal now proves a later accepted submission at contribution `195212`. The table's current status and baseline pointer were updated without deleting the earlier dossier/packet text; the previous network evidence remains labeled legacy Studionet. Portal does not expose an exact acceptance timestamp in the observed record, so only the displayed 2026-09-08 contribution date and 2026-09-21 observation time are asserted.
+
+## MS-002 Phase 1 inventory — 2026-09-21
+
+- Accepted comparison floor: Project Revision 1 commit `f4d7cec499a39846ad8079b2d630d074aea6f039`, followed by accepted MS-001 implementation/evidence `c8f438131412923b039e7f89921f65713f44cc56` and accepted public repository head `2488bf6d04c99f955ff433904eb1cd71ae5cdd45`. `origin/main` matched this head when checked.
+- Accepted Portal records: [Project](https://portal.genlayer.foundation/builders/explorer/scopeseal-accord) and [MS-001](https://portal.genlayer.foundation/contribution/195212). The Portal submission form identifies ScopeSeal Accord's next contribution as milestone `v2`.
+- Accepted capability inventory: Revision 1's 2 GEN single-amendment agreement and official TED original/`can-modif` adjudication; MS-001's separate 1 GEN single-lot official E5 completion retention. Both have their own canonical state, credits, recovery, wallet journey, tests, and legacy Studionet evidence. These are baseline context, not MS-002 delta.
+- Repository: child Git root on `main`, 117 tracked paths, exact one pre-existing user edit in `docs/submission/project-listing.md` (left untouched), project and frontend `.env` present/ignored, parent `.env` present outside Git. Current accepted package set is `genlayer-js@1.1.8`, `genlayer@0.39.2`, Python `genlayer-py@v0.18`, `genlayer-test@v0.29`, `genvm-linter@0.11.0`.
+- Current workspace D1 is **Studio Dev** (`61997`), not legacy Studionet (`61999`). Read-only `eth_chainId` probes returned `0xf22d` from both `https://studio-dev.genlayer.com/api` (official canonical URL) and the locked `https://studio-next.genlayer.com/api` alias. [Official v0.6 migration guidance](https://docs.genlayer.com/developers/consensus-v06-migration) requires a coherent RC stack, fee-aware transaction estimates, and successful execution result as well as finality. The official `v2-dev` boilerplate branch at `816f3b88175032f10242e278c0d13d75f185c882` uses `genlayer-js@2.0.0-rc.1`, Python v0.19-dev/test v0.30-dev, and a different pinned Depends/API family. This is a **migration risk**, not evidence that the accepted Studionet contract already runs on Studio Dev.
+- Fresh read-only `npm run studionet:inspect` at 2026-09-20T22:48:52.186Z reported active legacy deployment/source identity unchanged, `scopeseal-closeout-001` canonical `CLOSED / RELEASE_RETENTION`, zero agreement/closeout credit, global received 6 / withdrawn 5 / locked 1 / credited 0 GEN. This is **baseline legacy Studionet state**; the 1 GEN retained in the separate browser tripwire branch is not a new V2 deposit or a recovered balance.
+- Collision risk: a plain redeployment, restyle, restated E5 release, generic retry fix, or screenshots of V1 cannot be claimed as a new judgment/consequence. Any selected V2 must have a distinctly usable integration or contract consequence and its own Studio Dev, browser, CI, and public proof. No new V2 phase is selected at this inventory checkpoint.
+
+## MS-002 Phase 2 backlog refresh — 2026-09-21
+
+This refresh is directional only; no new phase is selected by the table. Portal v2 permits a substantial new deployment/integration, but the old Studionet receipt is not Studio Dev proof. TED's official eForms guidance permits multiple completion lots, yet a bounded official SPARQL probe of five multi-lot E5 notices found distinct contract IDs per lot in the inspected fixtures. A global search for two amendments linked to one prior notice exceeded its 25-second bound. These are feasibility constraints, not claims that the cases do not exist.
+
+| Priority | Candidate | Relationship to Revision 1 / MS-001 | New user capability and GenLayer-specific need | Distinct consequence and evidence path | Dependencies / deferred work | Decision at refresh |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | Studio Dev Fee-Aware Launch | `EXTENDS` the accepted product through a new network/protocol integration, not a new E5 verdict | Sponsors and contractors can use the accepted amendment and closeout product on the current Studio Dev v0.6 stack, see a real fee quote before signing, and distinguish finality from execution success and consumed/refunded fees | Fresh Studio Dev contract + browser-wallet lifecycle + canonical GEN ledger and successful execution/fee receipt; previous Studionet evidence is baseline only | Coherent pinned RC SDK/runner/CLI/test stack, isolated migration spike, fee-profile tests, address/chain/proxy switch; no multi-lot or new evidence class | Leading candidate: current D1 makes it necessary and Portal explicitly recognizes a substantial new deployment; selection must reject a mere copy/redeploy |
+| 2 | Cumulative Amendment Chain | Potential substantial `EXTENDS` of Revision 1 | Parties judge aggregate drift across a bounded linked official `can-modif` sequence before releasing the amendment purse | New ordered exact-coverage semantic result controls the 2 GEN purse; source-chain and replay tests, fresh network lifecycle | Need a real multi-notice same-contract chain, bounded depth/version policy, and source probe; initial exact-prior fixture had only one modification and broad search timed out | Backlog; evidence readiness insufficient today |
+| 3 | Two-agreement Completion Portfolio | Potential substantial `EXTENDS` of MS-001 | One sponsor manages two closed contract agreements from the same procurement notice as a portfolio, with independent per-lot completion decisions | Exact two-lot/two-contract coverage, deterministic 1 GEN per agreement destinations and remainder, no duplicate/missing lot settlement | Official E5 multi-lot fixtures exist, but their lots have distinct contract IDs; requires a portfolio of separately bound agreements and original-source feasibility before selection | Backlog; cannot pretend a one-contract closeout covers these fixtures |
+| 4 | Independent Co-funder Consumption | Potential `NEW` integration | A real co-funder consumes finalized ScopeSeal status before releasing its own contribution | Authenticated/idempotent consumer-controlled state and a demonstrable external release, not a pass-through mirror | Requires an actual adopter or independently owned enforcement boundary; no such partner/current adoption evidence | Backlog; do not create a decorative second contract |
+
+Other adjacent maintenance (generic retry, UI polish, historical test-purse recovery) remains outside the milestone catalogue. Priority 1 preserves future substantial headroom in candidates 2–4 without claiming them now.
+
+## MS-002 Phase 3 selection — 2026-09-21
+
+The [MS-002 dossier](milestones/MS-002/README.md) records the full ten-dimension comparison against **both** accepted Revision 1 and MS-001, the 14-gate admission matrix, and the bounded evidence/value policy. Candidate dispositions:
+
+| Candidate | Five-item milestone quality bar | Relationship | Selection decision |
+| --- | --- | --- | --- |
+| Studio Dev Fee-Safe Lifecycle | All five pass **only** for the coherent v0.6 port with measured fee profile, real pre-signing quote, execution-result and fee/refund verification, fresh Studio Dev settlement, and changed browser path; a plain redeploy fails substantial/not-repackaging | Substantial `EXTENDS` | `SELECTED` as `MS-002`; this is one new protocol/network integration, not a new E5 judgment |
+| Cumulative Amendment Chain | Substantial in principle, but the bounded two-notice authoritative fixture and full-source path are not ready | Potential `EXTENDS` | `BACKLOG`; no source-chain or payout claim this phase |
+| Two-agreement Completion Portfolio | Substantial in principle, but multi-lot E5 rows represent separate contracts and require a portfolio state/value design | Potential `EXTENDS` | `BACKLOG`; no single-contract shortcut |
+| Independent Co-funder Consumption | Strong real-usage path, but no actual independent consumer/adopter exists yet | Potential `NEW` | `BACKLOG`; no pass-through consumer |
+
+The selected V2 delta is **not** the accepted amendment or single-lot completion judgment. It is making that accepted product usable on the current Studio Dev fee-funded consensus stack, with user-visible fee budget/outcome correctness and a fresh network/browser consequence. No adjacent feature is folded into it. Phase 3 admission is conditional on preserving all accepted invariants and on Phase 6/7 proving the planned lifecycle; any missing required proof returns the item to backlog rather than inflating a submission claim.
+
+| Milestone ID | Title | Status | Baseline reference | Delta fingerprint | Commit range | Deployment identity | Evidence index | Portal reference | Outcome date | Supersedes/extends | Lessons and follow-up |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `MS-002` | Studio Dev Fee-Safe Lifecycle | `SELECTED` | Accepted MS-001 public head `2488bf6`; Portal contribution `195212`; legacy Studionet `0x6AD210...83FD0` | Coherent v0.6 Studio Dev port + measured protocol-fee quote and success/refund-aware browser settlement of the accepted covenant | `2488bf6..PENDING` | Studio Dev address/source/Depends `PENDING_REAL_EVIDENCE` | [Dossier](milestones/MS-002/README.md) | `NOT_SUBMITTED` |  | Extends accepted Revision 1 and MS-001 without recounting their verdicts/evidence | Multi-lot, cumulative chain, and adopter integration remain backlog |

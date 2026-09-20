@@ -5,7 +5,7 @@ import pytest
 
 
 CONTRACT_PATH = Path(__file__).parents[2] / "contracts" / "scopeseal_accord.py"
-DEPENDS_LINE = '# { "Depends": "py-genlayer:1jb45aa8ynh2a9c9xn3b7qqh8sm5q93hwfp7jqmwsfhh8jpz09h6" }'
+DEPENDS_LINE = '# { "Depends": "py-genlayer:5jycge4q8k23462jtb0b9fyey1s9qz928sz2nbrd9mg4sxqg2qng" }'
 WRITE_METHODS = {
     "create_agreement",
     "ratify_agreement",
@@ -69,8 +69,9 @@ def _method_decorators(module: ast.Module) -> dict[str, set[str]]:
 def test_contract_is_ascii_and_has_current_header(source_bytes: bytes, source: str) -> None:
     assert source_bytes.decode("ascii") == source
     meaningful = [line for line in source.splitlines() if line.strip()]
-    assert meaningful[0] == DEPENDS_LINE
-    assert meaningful[1] == "from genlayer import *"
+    assert meaningful[0] == "# v0.3.0"
+    assert meaningful[1] == DEPENDS_LINE
+    assert meaningful[2] == "import genlayer as gl"
 
 
 def test_contract_has_exactly_one_project_contract_class(module: ast.Module) -> None:
@@ -79,7 +80,7 @@ def test_contract_has_exactly_one_project_contract_class(module: ast.Module) -> 
         if not isinstance(node, ast.ClassDef):
             continue
         bases = {_decorator_name(base) for base in node.bases}
-        if "gl.Contract" in bases:
+        if "gl.contract.Contract" in bases:
             contract_classes.append(node.name)
     assert contract_classes == ["ScopeSealAccord"]
 
@@ -126,7 +127,8 @@ def test_collections_are_not_reassigned_and_maps_are_string_keyed(module: ast.Mo
 
 
 def test_consensus_and_value_primitives_are_present(source: str) -> None:
-    assert "gl.vm.run_nondet(" in source
+    assert "gl.vm.run_nondet_default(" in source
+    assert "gl.vm.run_nondet(" not in source
     assert "run_nondet_unsafe" not in source
     assert "GEN_SCALE" in source
     assert "gl.message.value" in source

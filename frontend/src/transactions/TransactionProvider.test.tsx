@@ -23,7 +23,7 @@ describe("TransactionProvider", () => {
     act(() => {
       operation = result.current.run({
         label: "Create agreement",
-        submit: async () => ({ hash: "0xabc" }),
+        submit: async () => ({ hash: "0xabc", feeQuote: { maximumFeeAtto: 5n, applicationValueAtto: 2n } }),
         waitForAccepted: async () => acceptance.promise,
         waitForFinality: async () => finality.promise,
         reload,
@@ -43,6 +43,7 @@ describe("TransactionProvider", () => {
 
     expect(reload).toHaveBeenCalledOnce();
     expect(result.current.state.phase).toBe("finalized");
+    expect(result.current.state.feeQuote).toEqual({ maximumFeeAtto: 5n, applicationValueAtto: 2n });
   });
 
   it("reports failure without fabricating a transaction hash", async () => {

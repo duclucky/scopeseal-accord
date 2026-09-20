@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import sys
 import tempfile
 from pathlib import Path
 
@@ -8,7 +9,7 @@ import pytest
 from gltest.direct.loader import deploy_contract
 
 
-DIRECT_SDK_VERSION = "v0.2.16"
+DIRECT_SDK_VERSION = "v0.6.0-rc5"
 
 
 def _install_windows_stdin_patch() -> None:
@@ -22,8 +23,8 @@ def _install_windows_stdin_patch() -> None:
         return
 
     def inject_message_to_fd0(vm: VMContext) -> None:
-        from genlayer.py import calldata
-        from genlayer.py.types import Address
+        calldata = loader.import_calldata()
+        Address = loader.import_address()
 
         sender = Address(vm.sender) if isinstance(vm.sender, bytes) else vm.sender
         contract = Address(vm._contract_address) if isinstance(vm._contract_address, bytes) else vm._contract_address
@@ -82,6 +83,11 @@ def direct_deploy(direct_vm):
         path = Path(contract_path)
         if not path.is_absolute():
             path = (Path.cwd() / path).resolve()
+        # GenVM v0.3 permits one contract class per runtime import; direct mode
+        # re-imports the same file for each test in one interpreter process.
+        contract_module = sys.modules.get("genlayer.contract")
+        if contract_module is not None:
+            contract_module.__known_contract__ = None
         return deploy_contract(path, direct_vm, *args, sdk_version=sdk_version, **kwargs)
 
     return _deploy
@@ -90,6 +96,6 @@ def direct_deploy(direct_vm):
 def to_hex(address) -> str:
     if hasattr(address, "as_hex"):
         return address.as_hex
-    from genlayer.py.types import Address
+    from gltest.direct import loader
 
-    return Address(address).as_hex
+    return loader.import_address()(address).as_hex

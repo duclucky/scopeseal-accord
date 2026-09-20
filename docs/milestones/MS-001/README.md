@@ -1,6 +1,6 @@
 # MS-001 — Completion Retention Closeout
 
-Status: `SUBMISSION_READY`
+Status: `ACCEPTED` (Portal contribution [195212](https://portal.genlayer.foundation/contribution/195212); outcome observed 2026-09-21)
 
 ## Pinned accepted baseline
 
@@ -355,3 +355,16 @@ path is verified against the changed Studionet deployment.
 Phase 9 exit gate: `PASS`. `MS-001` is `SUBMISSION_READY`; all URLs and metrics are verified and the
 packet is self-contained. The final Portal control has not been used and requires explicit action-time
 authorization.
+
+## Portal outcome amendment — 2026-09-21
+
+The phase-9 text above preserves the pre-submission snapshot. In the authenticated Ducky Portal
+account, My Submissions now lists **Completion Retention Closeout**, Milestone v1, as **Accepted** with
+300 points and four evidence items. The public contribution record is
+https://portal.genlayer.foundation/contribution/195212 and displays the exact 971-character notes,
+the accepted compare link, successful CI run `34250248971`, and legacy Studionet contract links.
+The Portal displays contribution and submission date 2026-09-08, but no exact acceptance timestamp;
+the outcome was observed at 2026-09-21T05:43:19+07:00. The accepted repository end state is
+`2488bf6d04c99f955ff433904eb1cd71ae5cdd45`, with implementation/evidence through
+`c8f438131412923b039e7f89921f65713f44cc56`. This accepted delta is the baseline for MS-002;
+none of its E5 single-lot, 1 GEN retention, wallet, or Studionet evidence may be counted again as new.

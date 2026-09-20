@@ -10,13 +10,13 @@ export type WalletChain = {
 
 const configuredWalletRpc = import.meta.env.VITE_GENLAYER_WALLET_RPC_URL?.trim();
 
-export const STUDIONET_WALLET_CHAIN: WalletChain = {
-  chainId: "0xf22f",
-  chainName: import.meta.env.VITE_GENLAYER_WALLET_CHAIN_NAME?.trim() || "GenLayer Studionet",
+export const STUDIO_DEV_WALLET_CHAIN: WalletChain = {
+  chainId: "0xf22d",
+  chainName: import.meta.env.VITE_GENLAYER_WALLET_CHAIN_NAME?.trim() || "GenLayer Studio Dev",
   nativeCurrency: { name: "GEN", symbol: "GEN", decimals: 18 },
   rpcUrls: configuredWalletRpc ? [configuredWalletRpc] : [],
   blockExplorerUrls: [
-    import.meta.env.VITE_GENLAYER_EXPLORER_URL?.trim() || "https://explorer-studio.genlayer.com",
+    import.meta.env.VITE_GENLAYER_EXPLORER_URL?.trim() || "https://explorer-studio-dev.genlayer.com",
   ],
 };
 
@@ -27,7 +27,7 @@ function errorCode(error: unknown) {
   return undefined;
 }
 
-export async function ensureWalletChain(provider: Eip1193Provider, chain = STUDIONET_WALLET_CHAIN) {
+export async function ensureWalletChain(provider: Eip1193Provider, chain = STUDIO_DEV_WALLET_CHAIN) {
   try {
     await provider.request({
       method: "wallet_switchEthereumChain",
@@ -36,7 +36,7 @@ export async function ensureWalletChain(provider: Eip1193Provider, chain = STUDI
   } catch (error) {
     if (errorCode(error) !== 4902) throw error;
     if (chain.rpcUrls.length === 0) {
-      throw new Error("Wallet-compatible Studionet RPC is not configured");
+      throw new Error("Wallet-compatible Studio Dev RPC is not configured");
     }
     await provider.request({
       method: "wallet_addEthereumChain",

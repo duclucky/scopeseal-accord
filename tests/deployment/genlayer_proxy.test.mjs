@@ -22,7 +22,7 @@ test("production proxy forwards only bounded GenLayer read RPC", async () => {
   let forwarded;
   globalThis.fetch = async (url, init) => {
     forwarded = { url, payload: JSON.parse(init.body) };
-    return new Response(JSON.stringify({ jsonrpc: "2.0", id: 7, result: "0xf22f" }), {
+    return new Response(JSON.stringify({ jsonrpc: "2.0", id: 7, result: "0xf22d" }), {
       status: 200,
       headers: { "content-type": "application/json" },
     });
@@ -34,10 +34,10 @@ test("production proxy forwards only bounded GenLayer read RPC", async () => {
       headers: { "content-length": "74" },
       body: { jsonrpc: "2.0", id: 7, method: "eth_chainId", params: [] },
     }, response);
-    assert.equal(forwarded.url, "https://studio.genlayer.com/api");
+    assert.equal(forwarded.url, "https://studio-next.genlayer.com/api");
     assert.deepEqual(forwarded.payload, { jsonrpc: "2.0", id: 7, method: "eth_chainId", params: [] });
     assert.equal(response.record.statusCode, 200);
-    assert.match(response.record.body, /0xf22f/u);
+    assert.match(response.record.body, /0xf22d/u);
   } finally {
     globalThis.fetch = originalFetch;
   }

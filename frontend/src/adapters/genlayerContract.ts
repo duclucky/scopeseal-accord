@@ -1,10 +1,9 @@
-import { createClient as createSdkClient } from "genlayer-js";
-import { studionet } from "genlayer-js/chains";
-import { ExecutionResult, TransactionStatus } from "genlayer-js/types";
+import { createClient as createSdkClient, isSuccessful } from "genlayer-js-rc";
+import { studioDevnet } from "genlayer-js-rc/chains";
 import type { Agreement, Closeout } from "../domain/types";
 import { ensureWalletChain } from "../wallet/network";
 import type { Eip1193Provider } from "../wallet/types";
-import type { ContractAdapter, TransactionReference } from "./contract";
+import type { ContractAdapter, ProtocolFeeQuote, TransactionOutcome, TransactionReference } from "./contract";
 
 
 const GEN = 10n ** 18n;
@@ -13,12 +12,14 @@ type Address = `0x${string}`;
 
 export interface GenLayerClientLike {
   readContract(args: { address: Address; functionName: string; args?: unknown[]; jsonSafeReturn?: boolean }): Promise<unknown>;
-  writeContract(args: { address: Address; functionName: string; args?: unknown[]; value: bigint }): Promise<unknown>;
-  waitForTransactionReceipt(args: { hash: Address; status: TransactionStatus | string; retries?: number; interval?: number }): Promise<Record<string, unknown>>;
+  estimateTransactionFeesForWrite(args: { address: Address; functionName: string; args?: unknown[]; value?: bigint }): Promise<{ distribution: unknown; feeValue: bigint }>;
+  writeContract(args: { address: Address; functionName: string; args?: unknown[]; value: bigint; fees: { distribution: unknown; feeValue: bigint } }): Promise<unknown>;
+  waitForDecision(args: { hash: Address; retries?: number; interval?: number; fullTransaction?: boolean }): Promise<Record<string, unknown>>;
+  waitForFinalization(args: { hash: Address; retries?: number; interval?: number; fullTransaction?: boolean }): Promise<Record<string, unknown>>;
 }
 
 interface ClientConfig {
-  chain: typeof studionet;
+  chain: typeof studioDevnet;
   endpoint?: string;
   account?: Address;
   provider?: Eip1193Provider;
@@ -30,15 +31,16 @@ interface AdapterOptions {
   provider?: Eip1193Provider;
   icReadPath?: string;
   createClient?: (config: ClientConfig) => GenLayerClientLike;
+  confirmProtocolFee?: (quote: ProtocolFeeQuote) => boolean | Promise<boolean>;
 }
 
 type RawAgreement = Record<string, unknown>;
 
 
-function cloneStudionet(): typeof studionet {
+function cloneStudioDevnet(): typeof studioDevnet {
   return {
-    ...studionet,
-    rpcUrls: { ...studionet.rpcUrls, default: { http: [...studionet.rpcUrls.default.http] } },
+    ...studioDevnet,
+    rpcUrls: { ...studioDevnet.rpcUrls, default: { http: [...studioDevnet.rpcUrls.default.http] } },
   };
 }
 
@@ -83,8 +85,13 @@ function asGen(value: unknown): number {
 
 
 function finalizedExecutionSucceeded(receipt: Record<string, unknown>): boolean {
+  try {
+    if (isSuccessful(receipt as never)) return true;
+  } catch {
+    // Retain the bounded raw Studio fallback while receipt shapes converge.
+  }
   const normalized = receipt.txExecutionResultName ?? receipt.executionResultName;
-  if (normalized === ExecutionResult.FINISHED_WITH_RETURN) return true;
+  if (normalized === "FINISHED_WITH_RETURN") return true;
   const consensus = receipt.consensus_data;
   const leaders = typeof consensus === "object" && consensus !== null
     ? (consensus as RawAgreement).leader_receipt
@@ -95,6 +102,48 @@ function finalizedExecutionSucceeded(receipt: Record<string, unknown>): boolean 
   const execution = receipt.execution_result ?? leader?.execution_result;
   const result = receipt.resultName ?? receipt.result_name ?? receipt.result;
   return execution === "SUCCESS" && (result === "MAJORITY_AGREE" || result === 6);
+}
+
+function asOptionalBigInt(value: unknown): bigint | undefined {
+  try {
+    if (typeof value === "bigint") return value;
+    if (typeof value === "number" && Number.isSafeInteger(value)) return BigInt(value);
+    if (typeof value === "string" && /^\d+$/u.test(value)) return BigInt(value);
+  } catch {
+    return undefined;
+  }
+  return undefined;
+}
+
+function receiptFeeOutcome(receipt: Record<string, unknown>): TransactionOutcome {
+  const data = typeof receipt.data === "object" && receipt.data !== null ? receipt.data as RawAgreement : undefined;
+  const accountingCandidate = receipt.feeAccounting ?? receipt.fee_accounting ?? data?.feeAccounting ?? data?.fee_accounting;
+  const accounting = typeof accountingCandidate === "object" && accountingCandidate !== null
+    ? accountingCandidate as RawAgreement
+    : undefined;
+  if (!accounting) return {};
+  const paid = asOptionalBigInt(accounting.paid_fee_value);
+  const refunded = asOptionalBigInt(accounting.total_refunded);
+  return {
+    actualFeeAtto: paid === undefined ? undefined : paid - (refunded ?? 0n),
+    refundedFeeAtto: refunded,
+  };
+}
+
+function formatGen(atto: bigint): string {
+  const whole = atto / GEN;
+  const fraction = (atto % GEN).toString().padStart(18, "0").slice(0, 6).replace(/0+$/u, "");
+  return fraction ? `${whole}.${fraction}` : whole.toString();
+}
+
+function defaultFeeConfirmation(quote: ProtocolFeeQuote): boolean {
+  if (typeof window === "undefined" || typeof window.confirm !== "function") {
+    throw new Error("Protocol fee confirmation is unavailable in this environment.");
+  }
+  return window.confirm(
+    `Maximum Studio Dev network fee: ${formatGen(quote.maximumFeeAtto)} GEN. `
+      + `Application value: ${formatGen(quote.applicationValueAtto)} GEN. Continue to wallet signing?`,
+  );
 }
 
 
@@ -153,11 +202,12 @@ export function createGenLayerContractAdapter(options: AdapterOptions): Contract
   const address = options.contractAddress;
   const createClient = options.createClient ?? productionClient;
   const readPath = options.icReadPath ?? DEFAULT_READ_PATH;
-  const readClient = createClient({ chain: cloneStudionet(), endpoint: readPath });
+  const readClient = createClient({ chain: cloneStudioDevnet(), endpoint: readPath });
   const account = isAddress(options.account) ? options.account : undefined;
   const walletClient = account && options.provider
-    ? createClient({ chain: cloneStudionet(), account, provider: options.provider })
+    ? createClient({ chain: cloneStudioDevnet(), account, provider: options.provider })
     : undefined;
+  const confirmProtocolFee = options.confirmProtocolFee ?? defaultFeeConfirmation;
 
   const read = (functionName: string, args: unknown[] = []) => readClient.readContract({
     address, functionName, args, jsonSafeReturn: true,
@@ -167,27 +217,40 @@ export function createGenLayerContractAdapter(options: AdapterOptions): Contract
   const write = async (functionName: string, args: unknown[], value = 0n): Promise<TransactionReference> => {
     if (!account || !options.provider) throw new Error("Select a wallet account before writing to the contract.");
     await ensureWalletChain(options.provider);
-    const result = await walletClient!.writeContract({ address, functionName, args, value });
+    const estimate = await walletClient!.estimateTransactionFeesForWrite({ address, functionName, args, value });
+    if (typeof estimate.feeValue !== "bigint" || estimate.feeValue <= 0n || !estimate.distribution) {
+      throw new Error("Studio Dev returned an invalid protocol-fee estimate.");
+    }
+    const feeQuote: ProtocolFeeQuote = { maximumFeeAtto: estimate.feeValue, applicationValueAtto: value };
+    if (!await confirmProtocolFee(feeQuote)) throw new Error("Protocol fee was not approved.");
+    const result = await walletClient!.writeContract({
+      address, functionName, args, value,
+      fees: { distribution: estimate.distribution, feeValue: estimate.feeValue },
+    });
     if (!isHash(result)) throw new Error("Wallet submission returned an invalid transaction hash.");
-    return { hash: result };
+    return { hash: result, feeQuote };
   };
 
-  const waitFor = async (hash: string, status: TransactionStatus) => {
+  const waitForAccepted = async (hash: string) => {
     if (!isHash(hash)) throw new Error("Transaction hash is invalid.");
-    const receipt = await (walletClient ?? readClient).waitForTransactionReceipt({ hash, status, retries: 400, interval: 3_000 });
-    if (status === TransactionStatus.FINALIZED && !finalizedExecutionSucceeded(receipt)) {
-      throw new Error("The finalized transaction ended with an execution error.");
-    }
+    await (walletClient ?? readClient).waitForDecision({ hash, retries: 400, interval: 3_000, fullTransaction: true });
+  };
+
+  const waitForFinality = async (hash: string): Promise<TransactionOutcome> => {
+    if (!isHash(hash)) throw new Error("Transaction hash is invalid.");
+    const receipt = await (walletClient ?? readClient).waitForFinalization({ hash, retries: 400, interval: 3_000, fullTransaction: true });
+    if (!finalizedExecutionSucceeded(receipt)) throw new Error("The finalized transaction ended with an execution error.");
+    return receiptFeeOutcome(receipt);
   };
 
   return {
     configuration: {
       readConfigured: true,
       writeConfigured: Boolean(account && options.provider),
-      networkName: "Studionet",
+      networkName: "Studio Dev",
       contractAddress: address,
       icReadPath: readPath,
-      walletWriteChainId: "0xf22f",
+      walletWriteChainId: "0xf22d",
     },
     getAgreement,
     listAgreements: async (requestedAccount) => {
@@ -200,8 +263,8 @@ export function createGenLayerContractAdapter(options: AdapterOptions): Contract
       if (!isAddress(requestedAccount)) throw new Error("A valid account is required.");
       return asNumber(await read("get_credit_gen", [id, requestedAccount]));
     },
-    waitForAccepted: async (hash) => waitFor(hash, TransactionStatus.ACCEPTED),
-    waitForFinality: async (hash) => waitFor(hash, TransactionStatus.FINALIZED),
+    waitForAccepted,
+    waitForFinality,
     createAgreement: (input) => write("create_agreement", [
       input.id,
       input.contractor,

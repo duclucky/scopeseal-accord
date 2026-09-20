@@ -1,4 +1,6 @@
-import { TransactionStatus } from "genlayer-js/types";
+import { TransactionStatus } from "genlayer-js-rc/types";
+import { createClient as createRealClient } from "genlayer-js-rc";
+import { studioDevnet } from "genlayer-js-rc/chains";
 import { describe, expect, it, vi } from "vitest";
 import type { Eip1193Provider } from "../wallet/types";
 import { createGenLayerContractAdapter, type GenLayerClientLike } from "./genlayerContract";
@@ -59,9 +61,12 @@ function fakeClient(overrides: Partial<GenLayerClientLike> = {}): GenLayerClient
       throw new Error(`Unexpected read ${functionName}`);
     }),
     writeContract: vi.fn(async () => HASH),
-    waitForTransactionReceipt: vi.fn(async ({ status }) => ({
-      statusName: status,
+    estimateTransactionFeesForWrite: vi.fn(async () => ({ distribution: { leader: 1n }, feeValue: 5n * 10n ** 17n })),
+    waitForDecision: vi.fn(async () => ({ statusName: TransactionStatus.ACCEPTED })),
+    waitForFinalization: vi.fn(async () => ({
+      statusName: TransactionStatus.FINALIZED,
       txExecutionResultName: "FINISHED_WITH_RETURN",
+      feeAccounting: { paid_fee_value: 5n * 10n ** 17n, total_refunded: 10n ** 17n },
     })),
     ...overrides,
   };
@@ -69,6 +74,14 @@ function fakeClient(overrides: Partial<GenLayerClientLike> = {}): GenLayerClient
 
 
 describe("GenLayer contract adapter", () => {
+  it("constructs the real RC SDK client with the selected account at client creation", () => {
+    const provider: Eip1193Provider = { request: vi.fn(async () => "0xf22d") };
+    const client = createRealClient({ chain: studioDevnet, account: SPONSOR, provider: provider as never });
+    expect(client.writeContract).toBeTypeOf("function");
+    expect(client.estimateTransactionFeesForWrite).toBeTypeOf("function");
+    expect(client.waitForFinalization).toBeTypeOf("function");
+  });
+
   it("uses the same-origin IC path and maps canonical GEN state", async () => {
     const configurations: unknown[] = [];
     const client = fakeClient();
@@ -81,7 +94,8 @@ describe("GenLayer contract adapter", () => {
       readConfigured: true,
       writeConfigured: false,
       icReadPath: "/genlayer-rpc",
-      walletWriteChainId: "0xf22f",
+      walletWriteChainId: "0xf22d",
+      networkName: "Studio Dev",
     });
     await expect(adapter.getAgreement("scope-1")).resolves.toMatchObject({
       id: "scope-1",
@@ -108,12 +122,14 @@ describe("GenLayer contract adapter", () => {
 
 
   it("writes every lifecycle method through the explicitly selected provider", async () => {
-    const provider: Eip1193Provider = { request: vi.fn(async () => "0xf22f") };
+    const provider: Eip1193Provider = { request: vi.fn(async () => "0xf22d") };
     const client = fakeClient();
+    const confirmProtocolFee = vi.fn(async () => true);
     const adapter = createGenLayerContractAdapter({
       contractAddress: CONTRACT,
       account: SPONSOR,
       provider,
+      confirmProtocolFee,
       createClient: () => client,
     });
 
@@ -154,10 +170,33 @@ describe("GenLayer contract adapter", () => {
     ]);
     expect(client.writeContract).toHaveBeenNthCalledWith(1, expect.objectContaining({
       value: 2n * 10n ** 18n,
+      fees: expect.objectContaining({ feeValue: 5n * 10n ** 17n }),
       args: expect.arrayContaining(["scope-1", CONTRACTOR, "00190662-2025"]),
+    }));
+    expect(vi.mocked(client.writeContract).mock.calls[0][0]).not.toHaveProperty("account");
+    expect(confirmProtocolFee).toHaveBeenCalledTimes(14);
+    expect(confirmProtocolFee).toHaveBeenNthCalledWith(1, expect.objectContaining({
+      maximumFeeAtto: 5n * 10n ** 17n,
+      applicationValueAtto: 2n * 10n ** 18n,
     }));
     expect(provider.request).toHaveBeenCalledWith(expect.objectContaining({ method: "wallet_switchEthereumChain" }));
     expect(client.writeContract).toHaveBeenNthCalledWith(8, expect.objectContaining({ value: 10n ** 18n }));
+  });
+
+  it("never opens the wallet when the measured Studio Dev fee is rejected", async () => {
+    const provider: Eip1193Provider = { request: vi.fn(async () => "0xf22d") };
+    const client = fakeClient();
+    const adapter = createGenLayerContractAdapter({
+      contractAddress: CONTRACT,
+      account: SPONSOR,
+      provider,
+      confirmProtocolFee: async () => false,
+      createClient: () => client,
+    });
+
+    await expect(adapter.ratifyAgreement("scope-1")).rejects.toThrow(/fee was not approved/i);
+    expect(client.estimateTransactionFeesForWrite).toHaveBeenCalledOnce();
+    expect(client.writeContract).not.toHaveBeenCalled();
   });
 
   it("maps canonical closeout state in GEN", async () => {
@@ -196,31 +235,30 @@ describe("GenLayer contract adapter", () => {
     const adapter = createGenLayerContractAdapter({ contractAddress: CONTRACT, createClient: () => client });
 
     await adapter.waitForAccepted(HASH);
-    await adapter.waitForFinality(HASH);
-    expect(client.waitForTransactionReceipt).toHaveBeenNthCalledWith(1, expect.objectContaining({
-      hash: HASH, status: TransactionStatus.ACCEPTED,
-    }));
-    expect(client.waitForTransactionReceipt).toHaveBeenNthCalledWith(2, expect.objectContaining({
-      hash: HASH, status: TransactionStatus.FINALIZED,
-    }));
+    await expect(adapter.waitForFinality(HASH)).resolves.toEqual({
+      actualFeeAtto: 4n * 10n ** 17n,
+      refundedFeeAtto: 10n ** 17n,
+    });
+    expect(client.waitForDecision).toHaveBeenCalledWith(expect.objectContaining({ hash: HASH }));
+    expect(client.waitForFinalization).toHaveBeenCalledWith(expect.objectContaining({ hash: HASH }));
   });
 
 
   it("uses the selected wallet provider for receipt polling and accepts raw Studio success receipts", async () => {
-    const provider: Eip1193Provider = { request: vi.fn(async () => "0xf22f") };
+    const provider: Eip1193Provider = { request: vi.fn(async () => "0xf22d") };
     const readClient = fakeClient({
-      waitForTransactionReceipt: vi.fn(async () => { throw new Error("IC read proxy must not poll wallet transactions"); }),
+      waitForDecision: vi.fn(async () => { throw new Error("IC read proxy must not poll wallet transactions"); }),
+      waitForFinalization: vi.fn(async () => { throw new Error("IC read proxy must not poll wallet transactions"); }),
     });
     const walletClient = fakeClient({
-      waitForTransactionReceipt: vi.fn(async ({ status }) => status === TransactionStatus.FINALIZED
-        ? {
+      waitForDecision: vi.fn(async () => ({ status: 5, status_name: "ACCEPTED" })),
+      waitForFinalization: vi.fn(async () => ({
             status: 7,
             status_name: "FINALIZED",
             result: 6,
             result_name: "MAJORITY_AGREE",
             consensus_data: { leader_receipt: [{ execution_result: "SUCCESS" }] },
-          }
-        : { status: 5, status_name: "ACCEPTED" }),
+          })),
     });
     const configurations: unknown[] = [];
     const adapter = createGenLayerContractAdapter({
@@ -234,9 +272,10 @@ describe("GenLayer contract adapter", () => {
     });
 
     await expect(adapter.waitForAccepted(HASH)).resolves.toBeUndefined();
-    await expect(adapter.waitForFinality(HASH)).resolves.toBeUndefined();
-    expect(readClient.waitForTransactionReceipt).not.toHaveBeenCalled();
-    expect(walletClient.waitForTransactionReceipt).toHaveBeenCalledTimes(2);
+    await expect(adapter.waitForFinality(HASH)).resolves.toEqual({});
+    expect(readClient.waitForDecision).not.toHaveBeenCalled();
+    expect(walletClient.waitForDecision).toHaveBeenCalledOnce();
+    expect(walletClient.waitForFinalization).toHaveBeenCalledOnce();
     expect(configurations).toHaveLength(2);
     expect(configurations[0]).toMatchObject({ endpoint: "/genlayer-rpc" });
     expect(configurations[1]).toMatchObject({ account: SPONSOR, provider });
@@ -245,11 +284,9 @@ describe("GenLayer contract adapter", () => {
 
   it("rejects finalized execution errors", async () => {
     const client = fakeClient({
-      waitForTransactionReceipt: vi.fn(async ({ status }) => ({
-        statusName: status,
-        txExecutionResultName: status === TransactionStatus.FINALIZED
-          ? "FINISHED_WITH_ERROR"
-          : "NOT_VOTED",
+      waitForFinalization: vi.fn(async () => ({
+        statusName: TransactionStatus.FINALIZED,
+        txExecutionResultName: "FINISHED_WITH_ERROR",
       })),
     });
     const adapter = createGenLayerContractAdapter({ contractAddress: CONTRACT, createClient: () => client });

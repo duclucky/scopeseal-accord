@@ -1,5 +1,8 @@
-# { "Depends": "py-genlayer:1jb45aa8ynh2a9c9xn3b7qqh8sm5q93hwfp7jqmwsfhh8jpz09h6" }
-from genlayer import *
+# v0.3.0
+# { "Depends": "py-genlayer:5jycge4q8k23462jtb0b9fyey1s9qz928sz2nbrd9mg4sxqg2qng" }
+import genlayer as gl
+from genlayer.types import Address, bigint, u256
+from genlayer.storage import TreeMap, allow as allow_storage
 
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
@@ -34,10 +37,7 @@ def _as_address(account: Address) -> Address:
 
 
 def _sender() -> Address:
-    try:
-        return gl.message.sender_address
-    except Exception:
-        return gl.message.sender
+    return gl.message.sender_address
 
 
 def _parse_utc(value: str) -> datetime:
@@ -704,16 +704,7 @@ class AccountingSummary:
     withdrawn_gen: u256
 
 
-@gl.evm.contract_interface
-class _ExternalRecipient:
-    class View:
-        pass
-
-    class Write:
-        pass
-
-
-class ScopeSealAccord(gl.Contract):
+class ScopeSealAccord(gl.contract.Contract):
     agreements: TreeMap[str, Agreement]
     review_attempts: TreeMap[str, ReviewAttempt]
     account_agreement_ids: TreeMap[str, str]
@@ -875,7 +866,7 @@ class ScopeSealAccord(gl.Contract):
             mine = leader_fn()
             return _review_meaning(mine) == _review_meaning(leader_result.calldata)
 
-        result = gl.vm.run_nondet(leader_fn, validator_fn)
+        result = gl.vm.run_nondet_default(leader_fn, validator_fn)
         if not self._valid_review_result(agreement, modification_publication, result):
             result = _unverifiable_review(
                 "INVALID",
@@ -1017,7 +1008,7 @@ class ScopeSealAccord(gl.Contract):
         if int(agreement.sponsor_credit) == 0 and int(agreement.contractor_credit) == 0:
             agreement.state = "CLOSED"
         self._assert_accounting()
-        _ExternalRecipient(sender).emit_transfer(value=u256(amount))
+        gl.chain.Account(sender).emit_transfer(value=u256(amount))
 
     @gl.public.write.payable
     def open_closeout(
@@ -1088,7 +1079,7 @@ class ScopeSealAccord(gl.Contract):
                 return False
             return _closeout_meaning(leader_fn()) == _closeout_meaning(leader_result.calldata)
 
-        result = gl.vm.run_nondet(leader_fn, validator_fn)
+        result = gl.vm.run_nondet_default(leader_fn, validator_fn)
         if not self._valid_closeout_result(closeout, agreement, completion_publication, result):
             result = _unverifiable_closeout(completion_publication, "INVALID", "Deterministic closeout invariants failed.")
         if closeout.completion_publication == "":
@@ -1193,7 +1184,7 @@ class ScopeSealAccord(gl.Contract):
         if int(closeout.sponsor_credit) == 0 and int(closeout.contractor_credit) == 0:
             closeout.state = "CLOSED"
         self._assert_accounting()
-        _ExternalRecipient(sender).emit_transfer(value=u256(amount))
+        gl.chain.Account(sender).emit_transfer(value=u256(amount))
 
     @gl.public.view
     def get_agreement(self, agreement_id: str) -> Agreement:
@@ -1247,7 +1238,7 @@ class ScopeSealAccord(gl.Contract):
 
     def _emit_placeholder(self, recipient: Address, amount: bigint) -> None:
         # credit debited before transfer
-        _ExternalRecipient(recipient).emit_transfer(value=u256(amount))
+        gl.chain.Account(recipient).emit_transfer(value=u256(amount))
 
     def _agreement(self, agreement_id: str) -> Agreement:
         _require(agreement_id in self.agreements, "Agreement not found")

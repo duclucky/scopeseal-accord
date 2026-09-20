@@ -28,7 +28,7 @@ function agreement(state: Agreement["state"], extras: Partial<Agreement> = {}): 
 function adapter(value: Agreement): ContractAdapter {
   const transaction = async () => ({ hash: HASH });
   return {
-    configuration: { readConfigured: true, writeConfigured: true, networkName: "Studionet", contractAddress: "0x" + "1".repeat(40), icReadPath: "/genlayer-rpc", walletWriteChainId: "0xf22f" },
+    configuration: { readConfigured: true, writeConfigured: true, networkName: "Studio Dev", contractAddress: "0x" + "1".repeat(40), icReadPath: "/genlayer-rpc", walletWriteChainId: "0xf22d" },
     getAgreement: vi.fn(async () => value), listAgreements: vi.fn(async () => [value]), getCredit: vi.fn(async () => 0),
     waitForAccepted: vi.fn(async () => undefined), waitForFinality: vi.fn(async () => undefined),
     createAgreement: vi.fn(transaction), ratifyAgreement: vi.fn(transaction), reviewModification: vi.fn(transaction),
@@ -41,7 +41,7 @@ function adapter(value: Agreement): ContractAdapter {
 }
 
 function wallet(account: string): DetectedWallet {
-  return { id: account, name: "Test wallet", source: "eip6963", provider: { request: vi.fn(async ({ method }) => method === "eth_requestAccounts" ? [account] : "0xf22f") } };
+  return { id: account, name: "Test wallet", source: "eip6963", provider: { request: vi.fn(async ({ method }) => method === "eth_requestAccounts" ? [account] : "0xf22d") } };
 }
 
 async function renderConnected(path: string, contract: ContractAdapter, account: string) {

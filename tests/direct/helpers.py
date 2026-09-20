@@ -118,5 +118,7 @@ def mock_semantic_review(vm, verdict, rationale="Bounded semantic comparison.", 
         }
     vm.mock_llm(
         r"(?s).*ScopeSeal Accord semantic reviewer.*",
-        json.dumps(result),
+        # RC2 direct-mode mock decodes one JSON layer; GenVM v0.3 expects
+        # textual JSON and decodes it itself for response_format="json".
+        json.dumps(json.dumps(result)),
     )

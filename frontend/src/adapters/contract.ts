@@ -1,6 +1,16 @@
 import type { Agreement, Closeout, CreateAgreementInput, OpenCloseoutInput } from "../domain/types";
 
-export type TransactionReference = { hash: string };
+export type ProtocolFeeQuote = {
+  maximumFeeAtto: bigint;
+  applicationValueAtto: bigint;
+};
+
+export type TransactionOutcome = {
+  actualFeeAtto?: bigint;
+  refundedFeeAtto?: bigint;
+};
+
+export type TransactionReference = { hash: string; feeQuote?: ProtocolFeeQuote };
 
 export type AdapterConfiguration = {
   readConfigured: boolean;
@@ -17,7 +27,7 @@ export interface ContractAdapter {
   listAgreements(account: string): Promise<Agreement[]>;
   getCredit(id: string, account: string): Promise<number>;
   waitForAccepted(hash: string): Promise<void>;
-  waitForFinality(hash: string): Promise<void>;
+  waitForFinality(hash: string): Promise<TransactionOutcome | void>;
   createAgreement(input: CreateAgreementInput): Promise<TransactionReference>;
   ratifyAgreement(id: string): Promise<TransactionReference>;
   reviewModification(id: string, modificationPublication: string): Promise<TransactionReference>;
