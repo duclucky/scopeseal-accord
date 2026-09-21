@@ -12,13 +12,18 @@ const PARENT_ENV_PATH = join(PROJECT_ROOT, "..", ".env");
 const EVIDENCE_DIR = join(PROJECT_ROOT, "docs", "evidence", "studio-dev", "milestones", "MS-002");
 const DEPLOYMENT_PATH = join(EVIDENCE_DIR, "deployment.json");
 const ATTEMPTS_PATH = join(EVIDENCE_DIR, "deployment-attempts.json");
-const LIFECYCLE_PATH = join(EVIDENCE_DIR, "lifecycle.json");
 const RPC_URL = "https://studio-next.genlayer.com/api";
 const EXPLORER_URL = "https://explorer-studio-dev.genlayer.com";
 const CHAIN_ID = 61997;
 const CHAIN_ID_HEX = "0xf22d";
 const GEN = 10n ** 18n;
-const AGREEMENT_ID = "scopeseal-v2-001";
+const DEFAULT_AGREEMENT_ID = "scopeseal-v2-001";
+const AGREEMENT_ID = process.env.STUDIO_DEV_AGREEMENT_ID?.trim() || DEFAULT_AGREEMENT_ID;
+if (!/^[a-z0-9-]{8,64}$/u.test(AGREEMENT_ID)) throw new Error("Studio Dev agreement id override is invalid.");
+const LIFECYCLE_PATH = join(
+  EVIDENCE_DIR,
+  AGREEMENT_ID === DEFAULT_AGREEMENT_ID ? "lifecycle.json" : `lifecycle-${AGREEMENT_ID}.json`,
+);
 const TRANSACTION_APPROVAL = "STUDIO_DEV_TRANSACTION_APPROVED";
 const IDENTITY_KEYS = ["network", "chainId", "sourceCommit", "sourceSha256", "depends", "contractApi", "sponsor", "contractor"];
 
@@ -66,6 +71,10 @@ function readEnvironmentFile(path) {
 
 export function mergeEnvironment(projectEnvironment, parentEnvironment) {
   return { ...parentEnvironment, ...projectEnvironment };
+}
+
+export function safeOperationError(error) {
+  return { result: "FAILED", code: typeof error?.code === "number" ? error.code : null };
 }
 
 
@@ -444,6 +453,41 @@ async function inspect() {
   console.log(JSON.stringify(result, null, 2));
 }
 
+async function quoteReview() {
+  const clients = await roleClients(false);
+  const deployment = readJson(DEPLOYMENT_PATH, undefined);
+  if (!deployment?.active || deployment.result !== "SUCCESS") throw new Error("No active successful Studio Dev deployment exists.");
+  const state = await canonicalState(clients, deployment, AGREEMENT_ID);
+  if (nextLifecycleAction(state) !== "REVIEW") throw new Error("Canonical agreement is not ready for review.");
+  const file = lifecycleFile(deployment, clients);
+  await clients.sponsorClient.initializeConsensusSmartContract();
+  const estimate = await clients.sponsorClient.estimateTransactionFeesForWrite({
+    address: deployment.contractAddress,
+    functionName: "request_review",
+    args: [file.agreementId, file.modificationPublication],
+    value: 0n,
+  });
+  console.log(JSON.stringify({ result: "QUOTED", action: "REVIEW", agreementId: AGREEMENT_ID, applicationValueGEN: "0", maximumFeeGEN: formatGen(estimate.feeValue) }, null, 2));
+}
+
+async function quoteWithdrawal() {
+  const clients = await roleClients(true);
+  const deployment = readJson(DEPLOYMENT_PATH, undefined);
+  if (!deployment?.active || deployment.result !== "SUCCESS") throw new Error("No active successful Studio Dev deployment exists.");
+  const identity = currentIdentity(clients.sponsorAccount.address, clients.contractorAccount.address);
+  if (deploymentDecision(deployment, identity) !== "RESUME") throw new Error("Deployment identity does not match current signer pair.");
+  const state = await canonicalState(clients, deployment, AGREEMENT_ID);
+  if (nextLifecycleAction(state) !== "WITHDRAW_CONTRACTOR") throw new Error("Canonical agreement is not ready for contractor withdrawal.");
+  await clients.contractorClient.initializeConsensusSmartContract();
+  const estimate = await clients.contractorClient.estimateTransactionFeesForWrite({
+    address: deployment.contractAddress,
+    functionName: "withdraw_credit",
+    args: [AGREEMENT_ID],
+    value: 0n,
+  });
+  console.log(JSON.stringify({ result: "QUOTED", action: "WITHDRAW_CONTRACTOR", agreementId: AGREEMENT_ID, creditGEN: state.agreement.contractorCreditGEN, applicationValueGEN: "0", maximumFeeGEN: formatGen(estimate.feeValue) }, null, 2));
+}
+
 
 async function finalizeDeployment(clients, identity, hash, maximumFeeGEN = null) {
   const finalized = await waitForFinalizedSuccess(clients.sponsorClient, clients.isSuccessful, hash, "deploy");
@@ -638,6 +682,11 @@ async function lifecycle() {
     throw new Error("Lifecycle evidence belongs to a different deployment or actor pair.");
   }
   let state = await reconcilePending(file, clients, deployment);
+  const startingTransactionCount = file.transactions.length;
+  const maxNewTransactions = Number(process.env.STUDIO_DEV_MAX_NEW_TRANSACTIONS ?? "20");
+  if (!Number.isInteger(maxNewTransactions) || maxNewTransactions < 1 || maxNewTransactions > 20) {
+    throw new Error("STUDIO_DEV_MAX_NEW_TRANSACTIONS must be an integer from 1 to 20.");
+  }
   for (let step = 0; step < 20; step += 1) {
     const action = nextLifecycleAction(state);
     if (action === "REVIEW" && state.agreement?.state === "RETRYABLE") {
@@ -675,6 +724,18 @@ async function lifecycle() {
       console.log(JSON.stringify({ Result: "SUCCESS", agreementId: file.agreementId, agreementState: "CLOSED", closeoutState: "CLOSED", transactionCount: file.transactions.length }, null, 2));
       return;
     } else throw new Error(`Canonical lifecycle is inconsistent (${state.agreement?.state ?? "missing"}/${state.closeout?.state ?? "none"}).`);
+    if (file.transactions.length - startingTransactionCount >= maxNewTransactions) {
+      file.finalCanonical = state;
+      writeJson(LIFECYCLE_PATH, file);
+      console.log(JSON.stringify({
+        Result: "STEP_COMPLETE",
+        agreementId: file.agreementId,
+        newTransactions: file.transactions.length - startingTransactionCount,
+        agreementState: state.agreement?.state ?? null,
+        closeoutState: state.closeout?.state ?? null,
+      }, null, 2));
+      return;
+    }
   }
   throw new Error("Studio Dev lifecycle exceeded the bounded twenty-step limit.");
 }
@@ -683,16 +744,17 @@ async function lifecycle() {
 async function main() {
   const command = process.argv[2] ?? "inspect";
   if (command === "inspect") await inspect();
+  else if (command === "quote-review") await quoteReview();
+  else if (command === "quote-withdraw") await quoteWithdrawal();
   else if (command === "deploy") await deploy();
   else if (command === "lifecycle") await lifecycle();
-  else throw new Error("Usage: node scripts/studio-dev.mjs <inspect|deploy|lifecycle>");
+  else throw new Error("Usage: node scripts/studio-dev.mjs <inspect|quote-review|quote-withdraw|deploy|lifecycle>");
 }
 
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   main().catch((error) => {
-    const message = error instanceof Error ? error.message : "Unknown Studio Dev operation failure.";
-    console.error(`Studio Dev operation stopped: ${message}`);
+    console.error(JSON.stringify(safeOperationError(error)));
     process.exitCode = 1;
   });
 }

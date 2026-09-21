@@ -1,0 +1,38 @@
+{
+  "network": "studio-dev",
+  "attempts": [
+    {
+      "transactionHash": "0x96c5d5245ca449fc61d3ada1bfe3620769ce915fde8ec282e4faf890d39fde5f",
+      "network": "studio-dev",
+      "chainId": 61997,
+      "rpc": "https://studio-next.genlayer.com/api",
+      "repositoryCommit": "9a1ee93e1f92689eee3194fc271dbabc45502536",
+      "sourceCommit": "9a1ee93e1f92689eee3194fc271dbabc45502536",
+      "sourceSha256": "ad83be191d2423ec390bd94ff2667651bcebad6e46b651359e8ff7ffca6e0700",
+      "depends": "py-genlayer:5jycge4q8k23462jtb0b9fyey1s9qz928sz2nbrd9mg4sxqg2qng",
+      "contractApi": "ScopeSealAccord/3",
+      "sponsor": "0xC495ef51618D03267A1f227aFe5b27B38c748272",
+      "contractor": "0x45aD397c438397A702B53a7499a78D08961D39Db",
+      "status": "FINALIZED",
+      "submittedAt": "2026-09-20T23:39:52.449Z",
+      "maximumFeeGEN": "0.100000000000010352",
+      "result": "SUCCESS",
+      "operationalStatus": "ABANDONED_TESTNET",
+      "abandonReason": "Finalized withdrawal left 2 GEN in the contract despite zero ledger liabilities; no further value writes.",
+      "finalizedAt": "2026-09-20T23:40:28.827Z",
+      "contractAddress": "0x986D54837322349e837460aE89B4676B3e8e7313",
+      "receipt": {
+        "label": "deploy",
+        "transactionHash": "0x96c5d5245ca449fc61d3ada1bfe3620769ce915fde8ec282e4faf890d39fde5f",
+        "status": "FINALIZED",
+        "executionResult": "FINISHED_WITH_RETURN",
+        "consensusResult": "MAJORITY_AGREE",
+        "contractAddress": "0x986D54837322349e837460aE89B4676B3e8e7313",
+        "fee": {
+          "actualGEN": "0.000079139500000823",
+          "refundedGEN": "0.099920860500009529"
+        }
+      }
+    }
+  ]
+}

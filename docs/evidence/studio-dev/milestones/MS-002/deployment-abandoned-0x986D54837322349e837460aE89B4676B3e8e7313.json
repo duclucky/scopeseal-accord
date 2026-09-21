@@ -1,0 +1,15 @@
+{
+  "network": "studio-dev",
+  "chainId": 61997,
+  "sourceCommit": "9a1ee93e1f92689eee3194fc271dbabc45502536",
+  "sourceSha256": "ad83be191d2423ec390bd94ff2667651bcebad6e46b651359e8ff7ffca6e0700",
+  "contractAddress": "0x986D54837322349e837460aE89B4676B3e8e7313",
+  "deploymentTransactionHash": "0x96c5d5245ca449fc61d3ada1bfe3620769ce915fde8ec282e4faf890d39fde5f",
+  "withdrawalTransactionHash": "0x1b59e8d5e1bb64fa0a31ae5f3491dcbb3e708a3fca33b6cfb36f2cb51a5c867f",
+  "status": "ABANDONED_TESTNET",
+  "abandonedAt": "2026-09-21T01:19:07Z",
+  "remainingContractBalanceGEN": "2",
+  "reason": "Finalized withdrawal closed ledger but did not move 2 GEN to the contractor; no further value writes.",
+  "auditEvidence": "withdrawal-audit.json",
+  "lifecycleEvidence": "lifecycle-scopeseal-v2-browser-001.json"
+}

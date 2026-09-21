@@ -7,12 +7,22 @@ import {
   nextLifecycleAction,
   parseDepends,
   safeReceiptProjection,
+  safeOperationError,
   valueForAction,
 } from "../../scripts/studio-dev.mjs";
 
 
 test("project environment wins without exposing signer values", () => {
   assert.deepEqual(mergeEnvironment({ A: "project" }, { A: "parent", B: "parent" }), { A: "project", B: "parent" });
+});
+
+test("operation errors do not expose nested RPC or validator payloads", () => {
+  const error = new Error("node_config.private_key=must-not-leak");
+  error.code = -32000;
+  error.cause = { node_config: { private_key: "must-not-leak" } };
+  const safe = safeOperationError(error);
+  assert.deepEqual(safe, { result: "FAILED", code: -32000 });
+  assert.equal(JSON.stringify(safe).includes("must-not-leak"), false);
 });
 
 

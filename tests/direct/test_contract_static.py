@@ -136,6 +136,27 @@ def test_consensus_and_value_primitives_are_present(source: str) -> None:
     assert "credit debited before transfer" in source
 
 
+def test_eoa_withdrawals_use_external_chain_interface(module: ast.Module) -> None:
+    interfaces = [
+        node for node in module.body
+        if isinstance(node, ast.ClassDef)
+        and "gl.evm.contract_interface" in {_decorator_name(item) for item in node.decorator_list}
+    ]
+    assert [node.name for node in interfaces] == ["_Recipient"]
+    transfers = [
+        node for node in ast.walk(module)
+        if isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Attribute)
+        and node.func.attr == "emit_transfer"
+    ]
+    assert len(transfers) == 2
+    assert all(
+        isinstance(node.func.value, ast.Call)
+        and _decorator_name(node.func.value.func) == "_Recipient"
+        for node in transfers
+    )
+
+
 def test_official_queries_are_bounded_to_the_publication_graph(source: str) -> None:
     assert "def _publication_graph(publication: str) -> str:" in source
     assert source.count('"GRAPH <" + _publication_graph(publication) + "> {') == 3

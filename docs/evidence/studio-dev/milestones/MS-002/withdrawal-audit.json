@@ -1,0 +1,30 @@
+{
+  "network": "studio-dev",
+  "chainId": 61997,
+  "contractAddress": "0x986D54837322349e837460aE89B4676B3e8e7313",
+  "agreementId": "scopeseal-v2-browser-001",
+  "withdrawalTransactionHash": "0x1b59e8d5e1bb64fa0a31ae5f3491dcbb3e708a3fca33b6cfb36f2cb51a5c867f",
+  "parentReceiptStatus": "FINALIZED",
+  "parentExecutionResult": "FINISHED_WITH_RETURN",
+  "consensusResult": "MAJORITY_AGREE",
+  "emittedMessage": {
+    "type": "EXTERNAL",
+    "recipient": "0x45aD397c438397A702B53a7499a78D08961D39Db",
+    "valueGEN": "2",
+    "onAcceptance": false
+  },
+  "canonicalAfter": {
+    "agreementState": "CLOSED",
+    "lockedGEN": "0",
+    "contractorCreditGEN": "0",
+    "accountingReceivedGEN": "2",
+    "accountingWithdrawnGEN": "2"
+  },
+  "balanceAfter": {
+    "contractGEN": "2",
+    "contractorGEN": "1.00019557025004906"
+  },
+  "outcome": "TRANSFER_NOT_PROVEN",
+  "disposition": "ABANDONED_TESTNET",
+  "note": "The finalized parent and ledger debit do not prove an external GEN transfer. The contract balance still held 2 GEN on repeated RPC reads; no further value writes are permitted to this revision."
+}

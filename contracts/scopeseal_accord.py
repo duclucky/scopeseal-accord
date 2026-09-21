@@ -19,6 +19,15 @@ MAX_SOURCE_CHARS = 250000
 OFFICIAL_SPARQL_ENDPOINT = "https://publications.europa.eu/webapi/rdf/sparql"
 
 
+@gl.evm.contract_interface
+class _Recipient:
+    class View:
+        pass
+
+    class Write:
+        pass
+
+
 def _require(condition: bool, message: str) -> None:
     if not condition:
         raise gl.vm.UserError(message)
@@ -1008,7 +1017,7 @@ class ScopeSealAccord(gl.contract.Contract):
         if int(agreement.sponsor_credit) == 0 and int(agreement.contractor_credit) == 0:
             agreement.state = "CLOSED"
         self._assert_accounting()
-        gl.chain.Account(sender).emit_transfer(value=u256(amount))
+        _Recipient(sender).emit_transfer(value=u256(amount))
 
     @gl.public.write.payable
     def open_closeout(
@@ -1184,7 +1193,7 @@ class ScopeSealAccord(gl.contract.Contract):
         if int(closeout.sponsor_credit) == 0 and int(closeout.contractor_credit) == 0:
             closeout.state = "CLOSED"
         self._assert_accounting()
-        gl.chain.Account(sender).emit_transfer(value=u256(amount))
+        _Recipient(sender).emit_transfer(value=u256(amount))
 
     @gl.public.view
     def get_agreement(self, agreement_id: str) -> Agreement:
@@ -1235,10 +1244,6 @@ class ScopeSealAccord(gl.contract.Contract):
         if _address_key(account) == _address_key(closeout.contractor):
             return u256(int(closeout.contractor_credit) // GEN_SCALE)
         return u256(0)
-
-    def _emit_placeholder(self, recipient: Address, amount: bigint) -> None:
-        # credit debited before transfer
-        gl.chain.Account(recipient).emit_transfer(value=u256(amount))
 
     def _agreement(self, agreement_id: str) -> Agreement:
         _require(agreement_id in self.agreements, "Agreement not found")

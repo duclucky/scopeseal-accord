@@ -159,11 +159,17 @@ An earlier isolated feasibility probe resolved `genlayer-py v0.19.0-rc.2`, `genl
 
 `PASS` locally. The implementation matches the frozen V2 scope and all local required checks are green. Phase 6 remains open until browser-local RPC/CORS, real SDK adapter, failure/retry, canonical reload, and changed-journey evidence are verified; Phase 7 remains open until a separately authorized Studio Dev deployment and small-GEN lifecycle exist.
 
-## Phase 6 browser verification (partial; no transaction)
+## Phase 6 browser verification (partial)
 
 The local app was opened in the user's Chrome browser on 2026-09-21. Chrome displayed `Studio Dev RPC ready` through the same-origin proxy with no captured console warning/error, the wallet picker listed distinct EIP-6963/injected OKX and MetaMask providers, and the disconnected create page showed **2 GEN** plus `Connect wallet to create`. No provider was selected, no chain switch, signature, fee authorization, or contract write occurred. Evidence: [`docs/evidence/studio-dev/milestones/MS-002/local-browser.md`](../../evidence/studio-dev/milestones/MS-002/local-browser.md).
 
-Phase 6 remains `PARTIAL`, not `PASS`: the new deployment, connected-account preflight, exact fee quote/approval, finalized execution outcome, failure/retry, and canonical state reload require the separately authorized Phase 7 Studio Dev lifecycle.
+Phase 6 remains `PARTIAL`, not `PASS`: the connected browser creation and canonical reload below are verified, but the remaining browser lifecycle and failure/retry path are not yet proven end to end.
+
+The connected Chrome sponsor then created `scopeseal-v2-browser-001` through the actual frontend. Transaction `0x464cca7bf73027cd5c482a71de3ccb1043d84d994d08a67912bb5893eb3aa372` finalized successfully; the UI showed maximum network fee `0.000378544800010352 GEN`, actual fee `0.000078639500000823 GEN`, refund `0.000299905300009529 GEN`, and application value `2 GEN` as separate quantities. Canonical reload showed `DRAFT`, exactly `2 GEN` locked, zero credits, and accounting `received=2, locked=2, credited=0, withdrawn=0`. Evidence: [browser lifecycle](../../evidence/studio-dev/milestones/MS-002/lifecycle-scopeseal-v2-browser-001.json).
+
+The contractor ratified the same agreement, then sponsor transaction `0x8d5de08a72415b7961cea120d43fdf9e857d898df98604671dcbc2d6ca1f5666` requested review. Both finalized with successful execution. Canonical state after review was `SETTLED`, verdict `WITHIN_BASELINE`, `0 GEN` locked and `2 GEN` contractor credit. A fresh Chrome reload independently displayed these fields through the app's read path, with no connected wallet.
+
+Contractor withdrawal transaction `0x1b59e8d5e1bb64fa0a31ae5f3491dcbb3e708a3fca33b6cfb36f2cb51a5c867f` finalized with successful parent execution and emitted a 2 GEN external message to the correct recipient. The ledger became `CLOSED`, showing 2 GEN withdrawn, but repeated RPC balance reads still showed 2 GEN in the contract and no corresponding contractor increase. Therefore the external payout is **not proven**. This deployed revision is `ABANDONED_TESTNET`; do not send it more value or claim a complete lifecycle. See [withdrawal audit](../../evidence/studio-dev/milestones/MS-002/withdrawal-audit.json). A replacement source now uses the official EOA external-message interface, but local checks alone cannot prove its live payout; that requires a separately authorized new deployment and bounded Studio Dev smoke test.
 
 ## Phase 7 read-only preflight (no deployment)
 
