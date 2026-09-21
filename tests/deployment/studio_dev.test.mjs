@@ -1,8 +1,14 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { readFileSync } from "node:fs";
 
 import {
   deploymentDecision,
+  evidenceProfile,
+  isAgreementRecoveryAllowed,
+  isCloseoutRecoveryAllowed,
+  isWithinAcceptanceWindow,
+  isWithinNegotiationWindow,
   mergeEnvironment,
   nextLifecycleAction,
   parseDepends,
@@ -41,6 +47,13 @@ test("deployment resumes only the exact active identity", () => {
   assert.equal(deploymentDecision({ ...identity, sourceSha256: "changed", active: true, result: "SUCCESS", contractAddress: "0x1" }, identity), "REFUSE");
 });
 
+test("deployment requires both intended lifecycle signer roles before recording identity", () => {
+  const source = readFileSync(new URL("../../scripts/studio-dev.mjs", import.meta.url), "utf8");
+  const deployBlock = source.split("async function deploy() {")[1]?.split("function lifecycleFile(")[0];
+  assert.ok(deployBlock);
+  assert.match(deployBlock, /const clients = await roleClients\(true\)/u);
+});
+
 
 test("safe Studio Dev receipt projection omits validator internals and keeps fee outcome", () => {
   const receipt = {
@@ -73,4 +86,51 @@ test("human-facing application values remain one or two GEN", () => {
   assert.equal(valueForAction("CREATE"), 2n * 10n ** 18n);
   assert.equal(valueForAction("OPEN_CLOSEOUT"), 10n ** 18n);
   assert.equal(valueForAction("REVIEW"), 0n);
+});
+
+test("default fee fallback is allowed only inside the canonical negotiation window", () => {
+  const agreement = {
+    state: "NEGOTIATION",
+    hasProposal: false,
+    negotiationStartedAt: "2026-09-21T02:25:21Z",
+    negotiationDeadline: "2026-09-21T03:25:21Z",
+  };
+  assert.equal(isWithinNegotiationWindow(agreement, "2026-09-21T02:25:21Z"), true);
+  assert.equal(isWithinNegotiationWindow(agreement, "2026-09-21T03:25:20Z"), true);
+  assert.equal(isWithinNegotiationWindow(agreement, "2026-09-21T03:25:21Z"), false);
+  assert.equal(isWithinNegotiationWindow({ ...agreement, state: "ACTIVE" }, "2026-09-21T02:30:00Z"), false);
+  assert.equal(isWithinNegotiationWindow({ ...agreement, hasProposal: true }, "2026-09-21T02:30:00Z"), false);
+  assert.equal(isWithinAcceptanceWindow({ ...agreement, hasProposal: true }, "2026-09-21T02:30:00Z"), true);
+  assert.equal(isWithinAcceptanceWindow(agreement, "2026-09-21T02:30:00Z"), false);
+  assert.equal(isWithinAcceptanceWindow({ ...agreement, hasProposal: true }, "2026-09-21T03:25:21Z"), false);
+});
+
+test("E5 smoke profile binds the agreement to the completion notice authority", () => {
+  const profile = evidenceProfile("e5-closeout");
+  assert.equal(profile.originalPublication, "00547772-2025");
+  assert.equal(profile.buyerLegalId, "6912131539");
+  assert.equal(profile.procedureId, "d9f4bc69-ef7d-42f6-ad8f-802fd332b0a6");
+  assert.equal(profile.contractId, "3/PNO/2025");
+  assert.equal(profile.completionPublication, "00734925-2025");
+  assert.equal(profile.ratifyOffsetMs < profile.reviewOffsetMs, true);
+  assert.throws(() => evidenceProfile("unknown"), /profile/u);
+});
+
+test("agreement recovery becomes legal exactly at the state-specific deadline", () => {
+  const draft = { state: "DRAFT", ratifyDeadline: "2026-09-21T03:20:30Z", reviewDeadline: "2026-09-21T03:23:30Z", negotiationDeadline: "" };
+  assert.equal(isAgreementRecoveryAllowed(draft, "2026-09-21T03:20:29Z"), false);
+  assert.equal(isAgreementRecoveryAllowed(draft, "2026-09-21T03:20:30Z"), true);
+  assert.equal(isAgreementRecoveryAllowed({ ...draft, state: "ACTIVE" }, "2026-09-21T03:23:29Z"), false);
+  assert.equal(isAgreementRecoveryAllowed({ ...draft, state: "ACTIVE" }, "2026-09-21T03:23:30Z"), true);
+  assert.equal(isAgreementRecoveryAllowed({ ...draft, state: "CLOSED" }, "2026-09-21T04:00:00Z"), false);
+});
+
+test("closeout recovery becomes legal exactly at the state-specific deadline", () => {
+  const offered = { state: "OFFERED", ratifyDeadline: "2026-09-21T03:20:30Z", reviewDeadline: "2026-09-21T03:23:30Z", negotiationDeadline: "" };
+  assert.equal(isCloseoutRecoveryAllowed(offered, "2026-09-21T03:20:29Z"), false);
+  assert.equal(isCloseoutRecoveryAllowed(offered, "2026-09-21T03:20:30Z"), true);
+  assert.equal(isCloseoutRecoveryAllowed({ ...offered, state: "RETRYABLE" }, "2026-09-21T03:23:29Z"), false);
+  assert.equal(isCloseoutRecoveryAllowed({ ...offered, state: "RETRYABLE" }, "2026-09-21T03:23:30Z"), true);
+  assert.equal(isCloseoutRecoveryAllowed({ ...offered, state: "NEGOTIATION", negotiationDeadline: "2026-09-21T03:30:00Z" }, "2026-09-21T03:30:00Z"), true);
+  assert.equal(isCloseoutRecoveryAllowed({ ...offered, state: "CLOSED" }, "2026-09-21T04:00:00Z"), false);
 });

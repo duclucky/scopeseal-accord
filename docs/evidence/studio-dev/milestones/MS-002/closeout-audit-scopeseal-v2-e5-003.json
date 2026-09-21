@@ -1,0 +1,42 @@
+{
+  "observedAt": "2026-09-21T04:02:00Z",
+  "network": "studio-dev",
+  "chainId": 61997,
+  "contractAddress": "0xAD2c9170ec79D5772167D92A8335dfd78E3660Bf",
+  "agreementId": "scopeseal-v2-e5-003",
+  "authorityBinding": {
+    "originalPublication": "00547772-2025",
+    "completionPublication": "00734925-2025",
+    "buyerLegalId": "6912131539",
+    "procedureId": "d9f4bc69-ef7d-42f6-ad8f-802fd332b0a6",
+    "contractId": "3/PNO/2025"
+  },
+  "review": {
+    "transactionHash": "0x6b34e1c7bc2985e91ad5e449b4cb9a546f29778071ee9a1d4ed2ce22b9187ad6",
+    "status": "FINALIZED",
+    "executionResult": "FINISHED_WITH_RETURN",
+    "consensusResult": "MAJORITY_AGREE",
+    "verdict": "RELEASE_RETENTION",
+    "consequence": "CREDIT_CONTRACTOR",
+    "actualFeeGEN": "0.000081792750000823"
+  },
+  "contractorWithdrawal": {
+    "transactionHash": "0x035d7a6700792487cc94ec4a182ab833154171d8540159e863ca97dc6a5bd66c",
+    "status": "FINALIZED",
+    "executionResult": "FINISHED_WITH_RETURN",
+    "consensusResult": "MAJORITY_AGREE",
+    "withdrawnGEN": "1",
+    "actualFeeGEN": "0.000251306000000823",
+    "refundedGEN": "0.000508495600009529"
+  },
+  "canonicalAfter": {
+    "agreementState": "CLOSED",
+    "agreementVerdict": "EXPIRED_RECOVERY",
+    "closeoutState": "CLOSED",
+    "closeoutVerdict": "RELEASE_RETENTION",
+    "closeoutLockedGEN": "0",
+    "closeoutSponsorCreditGEN": "0",
+    "closeoutContractorCreditGEN": "0"
+  },
+  "limits": "Global contract accounting still included 1 GEN from the separate non-penalizing scopeseal-v2-smoke-002 RETRYABLE closeout when this audit was recorded; that amount is not part of this closed E5 closeout and remains recoverable only at its locked deadline."
+}

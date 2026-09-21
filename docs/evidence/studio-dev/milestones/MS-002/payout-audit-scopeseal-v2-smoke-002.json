@@ -1,0 +1,43 @@
+{
+  "observedAt": "2026-09-21T03:03:46.994Z",
+  "network": "studio-dev",
+  "chainId": 61997,
+  "contractAddress": "0xAD2c9170ec79D5772167D92A8335dfd78E3660Bf",
+  "agreementId": "scopeseal-v2-smoke-002",
+  "result": "PAYOUT_PROVEN",
+  "contractorWithdrawal": {
+    "transactionHash": "0x36855998daa7ee1fa6c41b793bf0f6fec5cec08db5f4a0771b22dd2f7219f040",
+    "status": "FINALIZED",
+    "executionResult": "FINISHED_WITH_RETURN",
+    "consensusResult": "MAJORITY_AGREE",
+    "withdrawnGEN": "1",
+    "actualFeeGEN": "0.000251305250000823",
+    "refundedGEN": "0.000508492750009529"
+  },
+  "sponsorWithdrawal": {
+    "transactionHash": "0x732c6bd475fb9fd76d699302c7ca65cb1f6c4d161b81ba62fa93a9883ee5a488",
+    "status": "FINALIZED",
+    "executionResult": "FINISHED_WITH_RETURN",
+    "consensusResult": "MAJORITY_AGREE",
+    "withdrawnGEN": "1",
+    "actualFeeGEN": "0.000251305750000823",
+    "refundedGEN": "0.000508494650009529"
+  },
+  "canonicalAfter": {
+    "state": "CLOSED",
+    "verdict": "NEGOTIATED",
+    "lockedGEN": "0",
+    "sponsorCreditGEN": "0",
+    "contractorCreditGEN": "0",
+    "accounting": {
+      "receivedGEN": "2",
+      "lockedGEN": "0",
+      "creditedGEN": "0",
+      "withdrawnGEN": "2"
+    },
+    "contractBalanceGEN": "0",
+    "sponsorBalanceGEN": "87.986820341999862487",
+    "contractorBalanceGEN": "1.999912006000046591"
+  },
+  "limits": "Studio Dev EVM receipts expose block 0, so historical per-block balance deltas are unavailable. Proof combines finalized successful receipts, canonical GenLayer accounting, recipient current balances, and the contract balance reaching exactly 0 GEN."
+}

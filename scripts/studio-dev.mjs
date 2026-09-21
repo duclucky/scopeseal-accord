@@ -74,7 +74,52 @@ export function mergeEnvironment(projectEnvironment, parentEnvironment) {
 }
 
 export function safeOperationError(error) {
-  return { result: "FAILED", code: typeof error?.code === "number" ? error.code : null };
+  const result = { result: "FAILED", code: typeof error?.code === "number" ? error.code : null };
+  const message = typeof error?.message === "string" ? error.message : "";
+  const known = [
+    "Contractor signer is required for the full lifecycle.",
+    "Deployment identity does not match current signer pair.",
+    "Deployment identity does not match current committed source and actor pair.",
+    "No active successful Studio Dev deployment exists.",
+    "Canonical closeout is not ready for recovery.",
+    "Studio Dev latest block timestamp is unavailable.",
+  ];
+  if (known.includes(message)) result.reason = message;
+  return result;
+}
+
+export function evidenceProfile(name = "amendment") {
+  if (name === "amendment") return {
+    name,
+    originalPublication: "00190662-2025",
+    originalNoticeUuid: "6480e4d5-6f07-4b83-8097-5756d8fbf527",
+    originalNoticeVersion: "01",
+    buyerLegalId: "3267368TH",
+    procedureId: "7f56490a-c5ba-4922-853b-07b18b0d14c1",
+    contractId: "417379",
+    canonicalObjective: "Deliver the procurement scope described by the original official TED contract notice.",
+    scopeAllowance: "Additions or omissions remain within baseline only when they preserve the original purpose, capability set, and material delivery boundary.",
+    modificationPublication: "00587863-2026",
+    completionPublication: "00734925-2025",
+    ratifyOffsetMs: 60 * 60 * 1000,
+    reviewOffsetMs: 24 * 60 * 60 * 1000,
+  };
+  if (name === "e5-closeout") return {
+    name,
+    originalPublication: "00547772-2025",
+    originalNoticeUuid: "58fb29a0-a611-464c-bed0-fe29401479e3",
+    originalNoticeVersion: "01",
+    buyerLegalId: "6912131539",
+    procedureId: "d9f4bc69-ef7d-42f6-ad8f-802fd332b0a6",
+    contractId: "3/PNO/2025",
+    canonicalObjective: "Complete the awarded single-lot procurement according to the signed public contract.",
+    scopeAllowance: "Permit only changes that preserve the awarded procurement objective and single-lot identity.",
+    modificationPublication: "",
+    completionPublication: "00734925-2025",
+    ratifyOffsetMs: 2 * 60 * 1000,
+    reviewOffsetMs: 5 * 60 * 1000,
+  };
+  throw new Error("Unknown Studio Dev evidence profile.");
 }
 
 
@@ -250,6 +295,54 @@ export function nextLifecycleAction(state) {
   return "STOP_INCONSISTENT";
 }
 
+export function isWithinNegotiationWindow(agreement, observedAt) {
+  if (agreement?.state !== "NEGOTIATION" || agreement.hasProposal) return false;
+  const observed = Date.parse(observedAt);
+  const started = Date.parse(agreement.negotiationStartedAt);
+  const deadline = Date.parse(agreement.negotiationDeadline);
+  return Number.isFinite(observed)
+    && Number.isFinite(started)
+    && Number.isFinite(deadline)
+    && observed >= started
+    && observed < deadline;
+}
+
+export function isWithinAcceptanceWindow(agreement, observedAt) {
+  if (agreement?.state !== "NEGOTIATION" || !agreement.hasProposal) return false;
+  const observed = Date.parse(observedAt);
+  const started = Date.parse(agreement.negotiationStartedAt);
+  const deadline = Date.parse(agreement.negotiationDeadline);
+  return Number.isFinite(observed)
+    && Number.isFinite(started)
+    && Number.isFinite(deadline)
+    && observed >= started
+    && observed < deadline;
+}
+
+export function isAgreementRecoveryAllowed(agreement, observedAt) {
+  if (!agreement || !["DRAFT", "ACTIVE", "RETRYABLE", "NEGOTIATION"].includes(agreement.state)) return false;
+  const deadline = agreement.state === "DRAFT"
+    ? agreement.ratifyDeadline
+    : agreement.state === "NEGOTIATION"
+      ? agreement.negotiationDeadline
+      : agreement.reviewDeadline;
+  const observed = Date.parse(observedAt);
+  const parsedDeadline = Date.parse(deadline);
+  return Number.isFinite(observed) && Number.isFinite(parsedDeadline) && observed >= parsedDeadline;
+}
+
+export function isCloseoutRecoveryAllowed(closeout, observedAt) {
+  if (!closeout || !["OFFERED", "ACTIVE", "RETRYABLE", "NEGOTIATION"].includes(closeout.state)) return false;
+  const deadline = closeout.state === "OFFERED"
+    ? closeout.ratifyDeadline
+    : closeout.state === "NEGOTIATION"
+      ? closeout.negotiationDeadline
+      : closeout.reviewDeadline;
+  const observed = Date.parse(observedAt);
+  const parsedDeadline = Date.parse(deadline);
+  return Number.isFinite(observed) && Number.isFinite(parsedDeadline) && observed >= parsedDeadline;
+}
+
 
 function requireTransactionApproval() {
   if (process.env[TRANSACTION_APPROVAL] !== "1") {
@@ -351,10 +444,88 @@ function normalizedAgreement(value) {
     attemptCount: Number(field(value, "attempt_count", "attemptCount") ?? 0),
     hasProposal: Boolean(field(value, "has_proposal", "hasProposal")),
     proposalNonce: Number(field(value, "proposal_nonce", "proposalNonce") ?? 0),
+    ratifyDeadline: field(value, "ratify_deadline", "ratifyDeadline") ?? "",
+    reviewDeadline: field(value, "review_deadline", "reviewDeadline") ?? "",
+    negotiationStartedAt: field(value, "negotiation_started_at", "negotiationStartedAt") ?? "",
+    negotiationDeadline: field(value, "negotiation_deadline", "negotiationDeadline") ?? "",
     lockedGEN: formatGen(field(value, "locked_amount", "lockedAmount") ?? 0),
     sponsorCreditGEN: formatGen(field(value, "sponsor_credit", "sponsorCredit") ?? 0),
     contractorCreditGEN: formatGen(field(value, "contractor_credit", "contractorCredit") ?? 0),
   };
+}
+
+async function latestBlockTime() {
+  const response = await fetch(RPC_URL, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "eth_getBlockByNumber", params: ["latest", false] }),
+  });
+  const payload = await response.json();
+  const timestamp = payload?.result?.timestamp;
+  if (typeof timestamp !== "string" || !/^0x[0-9a-f]+$/iu.test(timestamp)) {
+    throw new Error("Studio Dev latest block timestamp is unavailable.");
+  }
+  return new Date(Number(BigInt(timestamp)) * 1000).toISOString();
+}
+
+async function estimateProposeFees(client, deployment, agreement) {
+  try {
+    return { estimate: await client.estimateTransactionFeesForWrite({
+      address: deployment.contractAddress,
+      functionName: "propose_split",
+      args: [AGREEMENT_ID, 1n],
+      value: 0n,
+    }), quoteMethod: "EXACT_SIMULATION" };
+  } catch (error) {
+    const observedAt = await latestBlockTime();
+    if (error?.code !== -32000 || !isWithinNegotiationWindow(agreement, observedAt)) throw error;
+    return { estimate: await client.estimateTransactionFees(), quoteMethod: "DEFAULT_TIME_SIMULATION_FALLBACK", observedAt };
+  }
+}
+
+async function estimateAcceptFees(client, deployment, agreement, proposalNonce) {
+  try {
+    return await client.estimateTransactionFeesForWrite({
+      address: deployment.contractAddress,
+      functionName: "accept_split",
+      args: [AGREEMENT_ID, proposalNonce],
+      value: 0n,
+    });
+  } catch (error) {
+    const observedAt = await latestBlockTime();
+    if (error?.code !== -32000 || !isWithinAcceptanceWindow(agreement, observedAt)) throw error;
+    return client.estimateTransactionFees();
+  }
+}
+
+async function estimateRecoveryFees(client, deployment, agreement) {
+  try {
+    return await client.estimateTransactionFeesForWrite({
+      address: deployment.contractAddress,
+      functionName: "recover_expired",
+      args: [AGREEMENT_ID],
+      value: 0n,
+    });
+  } catch (error) {
+    const observedAt = await latestBlockTime();
+    if (error?.code !== -32000 || !isAgreementRecoveryAllowed(agreement, observedAt)) throw error;
+    return client.estimateTransactionFees();
+  }
+}
+
+async function estimateCloseoutRecoveryFees(client, deployment, closeout, agreementId) {
+  try {
+    return await client.estimateTransactionFeesForWrite({
+      address: deployment.contractAddress,
+      functionName: "recover_closeout",
+      args: [agreementId],
+      value: 0n,
+    });
+  } catch (error) {
+    const observedAt = await latestBlockTime();
+    if (error?.code !== -32000 || !isCloseoutRecoveryAllowed(closeout, observedAt)) throw error;
+    return client.estimateTransactionFees();
+  }
 }
 
 
@@ -365,6 +536,10 @@ function normalizedCloseout(value) {
     state: field(value, "state"),
     verdict: field(value, "verdict") ?? "",
     attemptCount: Number(field(value, "attempt_count", "attemptCount") ?? 0),
+    ratifyDeadline: field(value, "ratify_deadline", "ratifyDeadline") ?? "",
+    reviewDeadline: field(value, "review_deadline", "reviewDeadline") ?? "",
+    negotiationStartedAt: field(value, "negotiation_started_at", "negotiationStartedAt") ?? "",
+    negotiationDeadline: field(value, "negotiation_deadline", "negotiationDeadline") ?? "",
     hasProposal: Boolean(field(value, "has_proposal", "hasProposal")),
     proposalNonce: Number(field(value, "proposal_nonce", "proposalNonce") ?? 0),
     lockedGEN: formatGen(field(value, "locked_amount", "lockedAmount") ?? 0),
@@ -470,6 +645,56 @@ async function quoteReview() {
   console.log(JSON.stringify({ result: "QUOTED", action: "REVIEW", agreementId: AGREEMENT_ID, applicationValueGEN: "0", maximumFeeGEN: formatGen(estimate.feeValue) }, null, 2));
 }
 
+async function quoteCreate() {
+  const clients = await roleClients(true);
+  const deployment = readJson(DEPLOYMENT_PATH, undefined);
+  if (!deployment?.active || deployment.result !== "SUCCESS") throw new Error("No active successful Studio Dev deployment exists.");
+  const identity = currentIdentity(clients.sponsorAccount.address, clients.contractorAccount.address);
+  if (deploymentDecision(deployment, identity) !== "RESUME") throw new Error("Deployment identity does not match current signer pair.");
+  const state = await canonicalState(clients, deployment, AGREEMENT_ID);
+  if (nextLifecycleAction(state) !== "CREATE") throw new Error("Agreement already exists; refusing creation quote.");
+  const file = lifecycleFile(deployment, clients);
+  await clients.sponsorClient.initializeConsensusSmartContract();
+  const estimate = await clients.sponsorClient.estimateTransactionFeesForWrite({
+    address: deployment.contractAddress,
+    functionName: "create_agreement",
+    args: createArguments(file),
+    value: 2n * GEN,
+  });
+  console.log(JSON.stringify({ result: "QUOTED", action: "CREATE", agreementId: AGREEMENT_ID, applicationValueGEN: "2", maximumFeeGEN: formatGen(estimate.feeValue) }, null, 2));
+}
+
+async function quoteRatify() {
+  const clients = await roleClients(true);
+  const deployment = readJson(DEPLOYMENT_PATH, undefined);
+  if (!deployment?.active || deployment.result !== "SUCCESS") throw new Error("No active successful Studio Dev deployment exists.");
+  const identity = currentIdentity(clients.sponsorAccount.address, clients.contractorAccount.address);
+  if (deploymentDecision(deployment, identity) !== "RESUME") throw new Error("Deployment identity does not match current signer pair.");
+  const state = await canonicalState(clients, deployment, AGREEMENT_ID);
+  if (nextLifecycleAction(state) !== "RATIFY") throw new Error("Canonical agreement is not ready for contractor ratification.");
+  await clients.contractorClient.initializeConsensusSmartContract();
+  const estimate = await clients.contractorClient.estimateTransactionFeesForWrite({
+    address: deployment.contractAddress,
+    functionName: "ratify_agreement",
+    args: [AGREEMENT_ID],
+    value: 0n,
+  });
+  console.log(JSON.stringify({ result: "QUOTED", action: "RATIFY", agreementId: AGREEMENT_ID, applicationValueGEN: "0", maximumFeeGEN: formatGen(estimate.feeValue) }, null, 2));
+}
+
+async function quotePropose() {
+  const clients = await roleClients(true);
+  const deployment = readJson(DEPLOYMENT_PATH, undefined);
+  if (!deployment?.active || deployment.result !== "SUCCESS") throw new Error("No active successful Studio Dev deployment exists.");
+  const identity = currentIdentity(clients.sponsorAccount.address, clients.contractorAccount.address);
+  if (deploymentDecision(deployment, identity) !== "RESUME") throw new Error("Deployment identity does not match current signer pair.");
+  const state = await canonicalState(clients, deployment, AGREEMENT_ID);
+  if (nextLifecycleAction(state) !== "PROPOSE") throw new Error("Canonical agreement is not ready for a split proposal.");
+  await clients.sponsorClient.initializeConsensusSmartContract();
+  const { estimate, quoteMethod, observedAt } = await estimateProposeFees(clients.sponsorClient, deployment, state.agreement);
+  console.log(JSON.stringify({ result: "QUOTED", action: "PROPOSE", agreementId: AGREEMENT_ID, contractorAllocationGEN: "1", sponsorAllocationGEN: "1", applicationValueGEN: "0", maximumFeeGEN: formatGen(estimate.feeValue), quoteMethod, observedAt }, null, 2));
+}
+
 async function quoteWithdrawal() {
   const clients = await roleClients(true);
   const deployment = readJson(DEPLOYMENT_PATH, undefined);
@@ -477,15 +702,44 @@ async function quoteWithdrawal() {
   const identity = currentIdentity(clients.sponsorAccount.address, clients.contractorAccount.address);
   if (deploymentDecision(deployment, identity) !== "RESUME") throw new Error("Deployment identity does not match current signer pair.");
   const state = await canonicalState(clients, deployment, AGREEMENT_ID);
-  if (nextLifecycleAction(state) !== "WITHDRAW_CONTRACTOR") throw new Error("Canonical agreement is not ready for contractor withdrawal.");
-  await clients.contractorClient.initializeConsensusSmartContract();
-  const estimate = await clients.contractorClient.estimateTransactionFeesForWrite({
+  const action = nextLifecycleAction(state);
+  if (!["WITHDRAW_CONTRACTOR", "WITHDRAW_SPONSOR"].includes(action)) throw new Error("Canonical agreement is not ready for withdrawal.");
+  const actorClient = action === "WITHDRAW_CONTRACTOR" ? clients.contractorClient : clients.sponsorClient;
+  const creditGEN = action === "WITHDRAW_CONTRACTOR" ? state.agreement.contractorCreditGEN : state.agreement.sponsorCreditGEN;
+  await actorClient.initializeConsensusSmartContract();
+  const estimate = await actorClient.estimateTransactionFeesForWrite({
     address: deployment.contractAddress,
     functionName: "withdraw_credit",
     args: [AGREEMENT_ID],
     value: 0n,
   });
-  console.log(JSON.stringify({ result: "QUOTED", action: "WITHDRAW_CONTRACTOR", agreementId: AGREEMENT_ID, creditGEN: state.agreement.contractorCreditGEN, applicationValueGEN: "0", maximumFeeGEN: formatGen(estimate.feeValue) }, null, 2));
+  console.log(JSON.stringify({ result: "QUOTED", action, agreementId: AGREEMENT_ID, creditGEN, applicationValueGEN: "0", maximumFeeGEN: formatGen(estimate.feeValue) }, null, 2));
+}
+
+async function quoteRecovery() {
+  const clients = await roleClients(true);
+  const deployment = readJson(DEPLOYMENT_PATH, undefined);
+  if (!deployment?.active || deployment.result !== "SUCCESS") throw new Error("No active successful Studio Dev deployment exists.");
+  const identity = currentIdentity(clients.sponsorAccount.address, clients.contractorAccount.address);
+  if (deploymentDecision(deployment, identity) !== "RESUME") throw new Error("Deployment identity does not match current signer pair.");
+  const state = await canonicalState(clients, deployment, AGREEMENT_ID);
+  const observedAt = await latestBlockTime();
+  if (!isAgreementRecoveryAllowed(state.agreement, observedAt)) throw new Error("Canonical agreement is not ready for recovery.");
+  const estimate = await estimateRecoveryFees(clients.sponsorClient, deployment, state.agreement);
+  console.log(JSON.stringify({ result: "QUOTED", action: "RECOVER_EXPIRED", agreementId: AGREEMENT_ID, applicationValueGEN: "0", creditGEN: state.agreement.lockedGEN, maximumFeeGEN: formatGen(estimate.feeValue), observedAt }, null, 2));
+}
+
+async function quoteCloseoutRecovery() {
+  const clients = await roleClients(true);
+  const deployment = readJson(DEPLOYMENT_PATH, undefined);
+  if (!deployment?.active || deployment.result !== "SUCCESS") throw new Error("No active successful Studio Dev deployment exists.");
+  const identity = currentIdentity(clients.sponsorAccount.address, clients.contractorAccount.address);
+  if (deploymentDecision(deployment, identity) !== "RESUME") throw new Error("Deployment identity does not match current signer pair.");
+  const state = await canonicalState(clients, deployment, AGREEMENT_ID);
+  const observedAt = await latestBlockTime();
+  if (!isCloseoutRecoveryAllowed(state.closeout, observedAt)) throw new Error("Canonical closeout is not ready for recovery.");
+  const estimate = await estimateCloseoutRecoveryFees(clients.sponsorClient, deployment, state.closeout, AGREEMENT_ID);
+  console.log(JSON.stringify({ result: "QUOTED", action: "RECOVER_CLOSEOUT", agreementId: AGREEMENT_ID, applicationValueGEN: "0", creditGEN: state.closeout.lockedGEN, maximumFeeGEN: formatGen(estimate.feeValue), observedAt }, null, 2));
 }
 
 
@@ -516,7 +770,7 @@ async function finalizeDeployment(clients, identity, hash, maximumFeeGEN = null)
 async function deploy() {
   requireTransactionApproval();
   requireCommittedContract();
-  const clients = await roleClients(false);
+  const clients = await roleClients(true);
   const { existing, identity, result } = await inspection(clients);
   console.log(JSON.stringify({ inspect: result }, null, 2));
   const decision = deploymentDecision(existing, identity);
@@ -550,6 +804,7 @@ async function deploy() {
 function lifecycleFile(deployment, clients) {
   const existing = readJson(LIFECYCLE_PATH, undefined);
   if (existing) return existing;
+  const profile = evidenceProfile(process.env.STUDIO_DEV_EVIDENCE_PROFILE?.trim() || "amendment");
   return {
     network: "studio-dev",
     chainId: CHAIN_ID,
@@ -557,9 +812,19 @@ function lifecycleFile(deployment, clients) {
     contractAddress: deployment.contractAddress,
     sponsor: clients.sponsorAccount.address,
     contractor: clients.contractorAccount.address,
-    originalPublication: "00190662-2025",
-    modificationPublication: "00587863-2026",
-    completionPublication: "00734925-2025",
+    evidenceProfile: profile.name,
+    originalPublication: profile.originalPublication,
+    originalNoticeUuid: profile.originalNoticeUuid,
+    originalNoticeVersion: profile.originalNoticeVersion,
+    buyerLegalId: profile.buyerLegalId,
+    procedureId: profile.procedureId,
+    contractId: profile.contractId,
+    canonicalObjective: profile.canonicalObjective,
+    scopeAllowance: profile.scopeAllowance,
+    modificationPublication: profile.modificationPublication,
+    completionPublication: profile.completionPublication,
+    ratifyOffsetMs: profile.ratifyOffsetMs,
+    reviewOffsetMs: profile.reviewOffsetMs,
     applicationValueGEN: { agreement: "2", closeout: "1" },
     pendingTransaction: null,
     transactions: [],
@@ -598,12 +863,21 @@ async function lifecycleWrite({ file, clients, deployment, action, actor, functi
   const client = actorClient(clients, actor);
   const value = valueForAction(action);
   await client.initializeConsensusSmartContract();
-  const estimate = await client.estimateTransactionFeesForWrite({
-    address: deployment.contractAddress,
-    functionName,
-    args,
-    value,
-  });
+  const current = ["PROPOSE", "ACCEPT", "RECOVER_EXPIRED", "RECOVER_CLOSEOUT"].includes(action) ? await canonicalState(clients, deployment, file.agreementId) : null;
+  const estimate = action === "PROPOSE"
+    ? (await estimateProposeFees(client, deployment, current.agreement)).estimate
+    : action === "ACCEPT"
+      ? await estimateAcceptFees(client, deployment, current.agreement, args[1])
+      : action === "RECOVER_EXPIRED"
+        ? await estimateRecoveryFees(client, deployment, current.agreement)
+        : action === "RECOVER_CLOSEOUT"
+          ? await estimateCloseoutRecoveryFees(client, deployment, current.closeout, file.agreementId)
+      : await client.estimateTransactionFeesForWrite({
+      address: deployment.contractAddress,
+      functionName,
+      args,
+      value,
+    });
   const maximumFeeGEN = formatGen(estimate.feeValue);
   const hash = await client.writeContract({
     address: deployment.contractAddress,
@@ -626,6 +900,36 @@ async function lifecycleWrite({ file, clients, deployment, action, actor, functi
   return reconcilePending(file, clients, deployment);
 }
 
+async function recoverExpired() {
+  requireTransactionApproval();
+  const clients = await roleClients(true);
+  const deployment = readJson(DEPLOYMENT_PATH, undefined);
+  if (!deployment?.active || deployment.result !== "SUCCESS") throw new Error("No active successful Studio Dev deployment exists.");
+  const identity = currentIdentity(clients.sponsorAccount.address, clients.contractorAccount.address);
+  if (deploymentDecision(deployment, identity) !== "RESUME") throw new Error("Deployment identity does not match current committed source and actor pair.");
+  const file = lifecycleFile(deployment, clients);
+  let state = await reconcilePending(file, clients, deployment);
+  const observedAt = await latestBlockTime();
+  if (!isAgreementRecoveryAllowed(state.agreement, observedAt)) throw new Error("Canonical agreement is not ready for recovery.");
+  state = await lifecycleWrite({ file, clients, deployment, action: "RECOVER_EXPIRED", actor: "sponsor", functionName: "recover_expired", args: [file.agreementId] });
+  console.log(JSON.stringify({ Result: "STEP_COMPLETE", agreementId: file.agreementId, agreementState: state.agreement?.state ?? null }, null, 2));
+}
+
+async function recoverCloseout() {
+  requireTransactionApproval();
+  const clients = await roleClients(true);
+  const deployment = readJson(DEPLOYMENT_PATH, undefined);
+  if (!deployment?.active || deployment.result !== "SUCCESS") throw new Error("No active successful Studio Dev deployment exists.");
+  const identity = currentIdentity(clients.sponsorAccount.address, clients.contractorAccount.address);
+  if (deploymentDecision(deployment, identity) !== "RESUME") throw new Error("Deployment identity does not match current committed source and actor pair.");
+  const file = lifecycleFile(deployment, clients);
+  let state = await reconcilePending(file, clients, deployment);
+  const observedAt = await latestBlockTime();
+  if (!isCloseoutRecoveryAllowed(state.closeout, observedAt)) throw new Error("Canonical closeout is not ready for recovery.");
+  state = await lifecycleWrite({ file, clients, deployment, action: "RECOVER_CLOSEOUT", actor: "sponsor", functionName: "recover_closeout", args: [file.agreementId] });
+  console.log(JSON.stringify({ Result: "STEP_COMPLETE", agreementId: file.agreementId, closeoutState: state.closeout?.state ?? null }, null, 2));
+}
+
 
 function createArguments(file) {
   const now = Date.now();
@@ -634,15 +938,15 @@ function createArguments(file) {
     file.agreementId,
     file.contractor,
     file.originalPublication,
-    "6480e4d5-6f07-4b83-8097-5756d8fbf527",
-    "01",
-    "3267368TH",
-    "7f56490a-c5ba-4922-853b-07b18b0d14c1",
-    "417379",
-    "Deliver the procurement scope described by the original official TED contract notice.",
-    "Additions or omissions remain within baseline only when they preserve the original purpose, capability set, and material delivery boundary.",
-    iso(60 * 60 * 1000),
-    iso(24 * 60 * 60 * 1000),
+    file.originalNoticeUuid,
+    file.originalNoticeVersion,
+    file.buyerLegalId,
+    file.procedureId,
+    file.contractId,
+    file.canonicalObjective,
+    file.scopeAllowance,
+    iso(file.ratifyOffsetMs),
+    iso(file.reviewOffsetMs),
     3600,
   ];
 }
@@ -744,11 +1048,18 @@ async function lifecycle() {
 async function main() {
   const command = process.argv[2] ?? "inspect";
   if (command === "inspect") await inspect();
+  else if (command === "quote-create") await quoteCreate();
+  else if (command === "quote-ratify") await quoteRatify();
+  else if (command === "quote-propose") await quotePropose();
   else if (command === "quote-review") await quoteReview();
   else if (command === "quote-withdraw") await quoteWithdrawal();
+  else if (command === "quote-recover") await quoteRecovery();
+  else if (command === "quote-recover-closeout") await quoteCloseoutRecovery();
   else if (command === "deploy") await deploy();
+  else if (command === "recover") await recoverExpired();
+  else if (command === "recover-closeout") await recoverCloseout();
   else if (command === "lifecycle") await lifecycle();
-  else throw new Error("Usage: node scripts/studio-dev.mjs <inspect|quote-review|quote-withdraw|deploy|lifecycle>");
+  else throw new Error("Usage: node scripts/studio-dev.mjs <inspect|quote-create|quote-ratify|quote-propose|quote-review|quote-withdraw|quote-recover|quote-recover-closeout|deploy|recover|recover-closeout|lifecycle>");
 }
 
 

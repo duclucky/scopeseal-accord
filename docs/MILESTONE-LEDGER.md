@@ -33,7 +33,7 @@ At initial ledger creation, no milestone had been submitted. The dated MS-001 ou
 
 ## Current phase pointer
 
-`MS-002` — `SELECTED` after the 2026-09-21 quality, overlap, and gate audit below. `MS-001` is `ACCEPTED` on the authenticated Portal. The historical `SUBMISSION_READY` record below remains as a snapshot and is corrected by the dated outcome amendment.
+`MS-002` — `VERIFIED` after the 2026-09-21 local, Chrome, Studio Dev payout, retry, and E5 closeout evidence. Publication remains Phase 8 work. `MS-001` is `ACCEPTED` on the authenticated Portal. The historical `SUBMISSION_READY` record below remains as a snapshot and is corrected by the dated outcome amendment.
 
 ## Cross-phase claim and evidence inventory
 
@@ -192,4 +192,4 @@ The selected V2 delta is **not** the accepted amendment or single-lot completion
 
 | Milestone ID | Title | Status | Baseline reference | Delta fingerprint | Commit range | Deployment identity | Evidence index | Portal reference | Outcome date | Supersedes/extends | Lessons and follow-up |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `MS-002` | Studio Dev Fee-Safe Lifecycle | `SELECTED` | Accepted MS-001 public head `2488bf6`; Portal contribution `195212`; legacy Studionet `0x6AD210...83FD0` | Coherent v0.6 Studio Dev port + measured protocol-fee quote and success/refund-aware browser settlement of the accepted covenant | `2488bf6..PENDING` | Studio Dev address/source/Depends `PENDING_REAL_EVIDENCE` | [Dossier](milestones/MS-002/README.md) | `NOT_SUBMITTED` |  | Extends accepted Revision 1 and MS-001 without recounting their verdicts/evidence | Multi-lot, cumulative chain, and adopter integration remain backlog |
+| `MS-002` | Studio Dev Fee-Safe Lifecycle | `VERIFIED` | Accepted MS-001 public head `2488bf6`; Portal contribution `195212`; legacy Studionet `0x6AD210...83FD0` | Coherent v0.6 Studio Dev port + measured protocol-fee quote and success/refund-aware browser settlement of the accepted covenant | `2488bf6..PENDING_PUBLICATION` | Studio Dev `0xAD2c9170ec79D5772167D92A8335dfd78E3660Bf`; source commit `a4239e93f6e24ad3a23658a155e9be144ac03986`; `ScopeSealAccord/3` | [Dossier](milestones/MS-002/README.md) | `NOT_SUBMITTED` |  | Extends accepted Revision 1 and MS-001 without recounting their verdicts/evidence | Local/Chrome/Studio Dev verified; Phase 8 publication pending; multi-lot, cumulative chain, and adopter integration remain backlog |

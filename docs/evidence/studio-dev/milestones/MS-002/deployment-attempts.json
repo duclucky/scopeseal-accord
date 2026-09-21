@@ -33,6 +33,38 @@
           "refundedGEN": "0.099920860500009529"
         }
       }
+    },
+    {
+      "transactionHash": "0xe030b1106531df98b376cf1c508b28b38f430f642087dee678b134e96ae5c97f",
+      "network": "studio-dev",
+      "chainId": 61997,
+      "rpc": "https://studio-next.genlayer.com/api",
+      "repositoryCommit": "a4239e93f6e24ad3a23658a155e9be144ac03986",
+      "sourceCommit": "a4239e93f6e24ad3a23658a155e9be144ac03986",
+      "sourceSha256": "b7c751fe0b3384b583c5874e43994588bb2a235dafaaa0e42f2e53baf5fa4268",
+      "depends": "py-genlayer:5jycge4q8k23462jtb0b9fyey1s9qz928sz2nbrd9mg4sxqg2qng",
+      "contractApi": "ScopeSealAccord/3",
+      "sponsor": "0xC495ef51618D03267A1f227aFe5b27B38c748272",
+      "contractor": "0x45aD397c438397A702B53a7499a78D08961D39Db",
+      "identityRepairNote": "Intended contractor identity verified from the authorized signer after deployment; no chain transaction changed.",
+      "status": "FINALIZED",
+      "submittedAt": "2026-09-21T01:44:13.757Z",
+      "maximumFeeGEN": "0.100000000000010352",
+      "result": "SUCCESS",
+      "finalizedAt": "2026-09-21T01:44:49.207Z",
+      "contractAddress": "0xAD2c9170ec79D5772167D92A8335dfd78E3660Bf",
+      "receipt": {
+        "label": "deploy",
+        "transactionHash": "0xe030b1106531df98b376cf1c508b28b38f430f642087dee678b134e96ae5c97f",
+        "status": "FINALIZED",
+        "executionResult": "FINISHED_WITH_RETURN",
+        "consensusResult": "MAJORITY_AGREE",
+        "contractAddress": "0xAD2c9170ec79D5772167D92A8335dfd78E3660Bf",
+        "fee": {
+          "actualGEN": "0.000079138750000823",
+          "refundedGEN": "0.099920861250009529"
+        }
+      }
     }
   ]
 }
