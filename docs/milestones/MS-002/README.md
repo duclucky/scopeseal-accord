@@ -1,6 +1,6 @@
 # MS-002 — Studio Dev Fee-Safe Lifecycle
 
-Status: `VERIFIED` (2026-09-21). Studio Dev, browser, payout, recovery, publication, and local verification evidence are complete; no Portal submission is claimed.
+Status: `SUBMISSION_READY` (2026-09-22). Studio Dev, browser, payout, recovery, publication, CI, live Vercel, and local verification evidence are complete. Final Portal submission is not authorized or claimed.
 
 ## Pinned accepted baseline and exact delta
 
@@ -196,3 +196,15 @@ A separate E5-bound lifecycle `scopeseal-v2-e5-003` locked original publication 
 ## Phase 8 publication
 
 `PASS` for the selected product delta. Commits through `2f827f9` preserve the existing public history and are live on `main`; [CI run 35560327654](https://github.com/duclucky/scopeseal-accord/actions/runs/35560327654) completed successfully. Vercel deployment `dpl_6wUV3SuSMvhSw3T5XLMcKtF9wkrS` is `Ready` and aliased at <https://scopeseal-accord.vercel.app>. Fresh shell checks returned HTTP 200, app name, React root, and same-origin chain `0xf22d`; fresh Chrome read `CLOSED / RELEASE_RETENTION / 0 GEN` from the active Studio Dev contract. See [publication evidence](../../evidence/studio-dev/milestones/MS-002/publication.md). The final evidence-only push records the completed retry closeout recovery; it does not change the published frontend or selected capability.
+
+The final sanitized recovery and verification evidence is public through commit `dae1ba95453f8900b8269b87c270fbe67fed1d26`. The exact substantive delta range is [`2488bf6..dae1ba9`](https://github.com/duclucky/scopeseal-accord/compare/2488bf6d04c99f955ff433904eb1cd71ae5cdd45...dae1ba95453f8900b8269b87c270fbe67fed1d26); CI run [35689747449](https://github.com/duclucky/scopeseal-accord/actions/runs/35689747449) verifies that evidence head.
+
+## Phase 9 submission package
+
+`PASS / SUBMISSION_READY`. Contract source, the current 133-test aggregate, sanitized Studio Dev evidence, README/dossier claims, public Git history, successful CI, and the live application were cross-checked. The bounded delta is the coherent current-network/runtime/SDK migration plus a pre-signing fee quote and receipt-derived execution/fee outcome; it does not claim a new procurement verdict.
+
+The dated network metric is **two distinct agreement IDs on the active Studio Dev replacement deployment closed on 2026-09-21** (`scopeseal-v2-smoke-002` and `scopeseal-v2-e5-003`), deduplicated by canonical agreement ID. The first proves negotiated 1/1 GEN payout plus non-penalizing mismatched-closeout recovery; the second proves expired-draft recovery and authenticated E5 retention release. Global application accounting is `received=6 / withdrawn=6 / locked=0 / credited=0 GEN`, and contract balance is `0 GEN`.
+
+Real-usage signal is limited to the complete testnet demo flows; no independent customer, mainnet, or production-adoption claim is made. The production-origin extension declined a fresh wallet connection, so production browser writes are not claimed; the local Chrome browser-write lifecycle and the production canonical read path are proven separately. Multi-lot, cumulative notice chains, and independent consumer integration remain backlog.
+
+The self-contained copy is in [the MS-002 submission packet](../../MILESTONE-SUBMISSION-MS-002.md). Phase 10 is intentionally blocked until the owner gives new explicit action-time authorization for the final Portal Submit control.
