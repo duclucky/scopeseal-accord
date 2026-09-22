@@ -38,5 +38,5 @@
     "closeoutSponsorCreditGEN": "0",
     "closeoutContractorCreditGEN": "0"
   },
-  "limits": "Global contract accounting still included 1 GEN from the separate non-penalizing scopeseal-v2-smoke-002 RETRYABLE closeout when this audit was recorded; that amount is not part of this closed E5 closeout and remains recoverable only at its locked deadline."
+  "limits": "At this audit timestamp, global accounting still included 1 GEN from the separate non-penalizing scopeseal-v2-smoke-002 RETRYABLE closeout; that amount was not part of this E5 closeout. It was later recovered after its exact deadline and withdrawn to the sponsor, as recorded in recovery-audit-scopeseal-v2-smoke-002.json."
 }

@@ -1,0 +1,38 @@
+{
+  "observedAt": "2026-09-21T05:13:58.335Z",
+  "network": "studio-dev",
+  "chainId": 61997,
+  "contractAddress": "0xAD2c9170ec79D5772167D92A8335dfd78E3660Bf",
+  "agreementId": "scopeseal-v2-smoke-002",
+  "deadline": "2026-09-21T05:08:17Z",
+  "recovery": {
+    "transactionHash": "0xb772d5e7443e59d0c8b4e84b5c2eb5a441b7c8582715692057dc124144c84642",
+    "status": "FINALIZED",
+    "executionResult": "FINISHED_WITH_RETURN",
+    "consensusResult": "MAJORITY_AGREE",
+    "actualFeeGEN": "0.000078630750000823",
+    "refundedGEN": "0.099921369250009529",
+    "canonicalAfter": "SETTLED / EXPIRED_RECOVERY / 1 GEN sponsor credit"
+  },
+  "withdrawal": {
+    "transactionHash": "0x85fb9dd120b1bcf6d6bb158421d93f1462e709756d0492db5aa084708ae7f4bb",
+    "status": "FINALIZED",
+    "executionResult": "FINISHED_WITH_RETURN",
+    "consensusResult": "MAJORITY_AGREE",
+    "withdrawnGEN": "1",
+    "actualFeeGEN": "0.000251306000000823",
+    "refundedGEN": "0.000508495600009529"
+  },
+  "canonicalFinal": {
+    "closeoutState": "CLOSED",
+    "closeoutVerdict": "EXPIRED_RECOVERY",
+    "closeoutLockedGEN": "0",
+    "closeoutSponsorCreditGEN": "0",
+    "closeoutContractorCreditGEN": "0",
+    "globalReceivedGEN": "6",
+    "globalLockedGEN": "0",
+    "globalCreditedGEN": "0",
+    "globalWithdrawnGEN": "6",
+    "contractBalanceGEN": "0"
+  }
+}
